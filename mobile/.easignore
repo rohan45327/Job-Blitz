@@ -1,0 +1,9 @@
+node_modules
+.expo
+android
+ios
+dist
+build
+*.log
+*.tmp
+.env*.local
