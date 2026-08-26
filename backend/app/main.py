@@ -40,6 +40,27 @@ app.include_router(resumes.router, prefix="/api/v1")
 app.include_router(ai.router, prefix="/api/v1")
 
 
+import threading
+
+def auto_seed_jobs_if_empty():
+    try:
+        from app.core.database import SessionLocal
+        from app.models.models import Job
+        db = SessionLocal()
+        count = db.query(Job).count()
+        db.close()
+        if count == 0:
+            print("Database has 0 jobs. Running background ingestion from ATS boards...")
+            from app.worker.tasks import run_ingestion
+            run_ingestion()
+    except Exception as e:
+        print(f"Auto-seed exception: {e}")
+
+@app.on_event("startup")
+def startup_event():
+    threading.Thread(target=auto_seed_jobs_if_empty, daemon=True).start()
+
+
 @app.get("/")
 @app.get("/health")
 def health_check():

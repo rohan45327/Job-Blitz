@@ -42,6 +42,25 @@ def get_job_feed(
     return JobFeedResponse(items=matched, total=total, page=page, page_size=page_size, total_pages=total_pages)
 
 
+@router.post("/ingest")
+def trigger_ingestion(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Trigger background job ingestion from ATS boards & job sources."""
+    import threading
+    from app.worker.tasks import run_ingestion
+    
+    def run_async():
+        try:
+            run_ingestion()
+        except Exception as e:
+            print(f"Ingestion error: {e}")
+
+    threading.Thread(target=run_async, daemon=True).start()
+    return {"message": "Job ingestion started in background", "status": "processing"}
+
+
 @router.get("/{job_id}", response_model=JobDetailOut)
 def get_job_detail(
     job_id: UUID,
