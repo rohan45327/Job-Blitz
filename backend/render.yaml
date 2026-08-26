@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: jobblitz-backend
+    env: python
+    region: singapore
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: jobblitz-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: jobblitz-redis
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: AI_PROVIDER
+        value: gemini
+
+databases:
+  - name: jobblitz-db
+    databaseName: jobblitz_db
+    user: jobblitz
