@@ -6,8 +6,11 @@ from app.core.database import engine, Base
 import app.models  # noqa: F401
 from app.api.routes import auth, users, jobs, applications, watchlist, ai, resumes
 
-# Create database tables if they do not exist
-Base.metadata.create_all(bind=engine)
+# Create database tables if they do not exist (safely catch pre-existing Postgres enum type errors)
+try:
+    Base.metadata.create_all(bind=engine)
+except Exception as err:
+    print(f"Database schema initialization notice: {err}")
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -20,8 +23,7 @@ app = FastAPI(
 # ─── CORS ──────────────────────────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8081", "http://localhost:8082", "http://localhost:19006", "http://localhost:3000", "http://127.0.0.1:8081", "http://127.0.0.1:8082"],
-    allow_origin_regex=r"https?://.*",
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -38,6 +40,7 @@ app.include_router(resumes.router, prefix="/api/v1")
 app.include_router(ai.router, prefix="/api/v1")
 
 
+@app.get("/")
 @app.get("/health")
 def health_check():
     return {"status": "ok", "app": settings.APP_NAME}
