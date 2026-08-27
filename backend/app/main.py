@@ -46,13 +46,14 @@ def auto_seed_jobs_if_empty():
     try:
         from app.core.database import SessionLocal
         from app.models.models import Job
+        from app.services.fast_seed import seed_fast_jobs
         db = SessionLocal()
         count = db.query(Job).count()
-        db.close()
         if count == 0:
-            print("Database has 0 jobs. Running background ingestion from ATS boards...")
-            from app.worker.tasks import run_ingestion
-            run_ingestion()
+            print("Database has 0 jobs. Seeding fast MNC job postings...")
+            inserted = seed_fast_jobs(db)
+            print(f"Fast seed completed successfully. {inserted} jobs inserted into PostgreSQL.")
+        db.close()
     except Exception as e:
         print(f"Auto-seed exception: {e}")
 

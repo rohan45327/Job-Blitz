@@ -2,8 +2,11 @@ import React, { useState } from 'react';
 import {
   Modal, View, Text, StyleSheet, TouchableOpacity, ScrollView,
 } from 'react-native';
+import { Feather } from '@expo/vector-icons';
+import { Typography, Spacing, Radius } from '../../theme/tokens';
+import { useTheme } from '../../theme/ThemeContext';
 
-// ─── Exact company list the user wants filterable ───────────────────────────
+// ─── Exact company list the user wants filterable ────────────────────────────
 const ALL_FILTER_COMPANIES = [
   // Fintech
   'Paytm', 'PhonePe', 'Razorpay', 'CRED', 'Groww', 'Zeta', 'MobiKwik',
@@ -17,15 +20,11 @@ const ALL_FILTER_COMPANIES = [
   'LTTS', 'Persistent Systems', 'LTIMindtree', 'Mphasis', 'EPAM Systems',
 ];
 
-// Fintech companies — shown with gold tint chip + crown
-const FINTECH_COMPANIES = new Set([
-  'Paytm', 'PhonePe', 'Razorpay', 'CRED', 'Groww', 'MobiKwik',
-  'PayPal', 'Visa', 'Intuit', 'Zerodha', 'BharatPe', 'Google', 'Microsoft', 'Amazon', 'Adobe', 'Meta', 'Salesforce', 'Oracle',
-  'SAP', 'Apple', 'Uber', 'LinkedIn', 'Goldman Sachs', 'Flipkart', 'Zoho', 'Freshworks', 'TCS', 'Infosys', 'Wipro', 'HCL Technologies', 'Tech Mahindra',
-  'Accenture', 'Cognizant', 'Capgemini', 'Deloitte', 'IBM',
-  'LTTS'
+// Top-tier companies — subtle accent tint
+const TOP_COMPANIES = new Set([
+  'Google', 'Microsoft', 'Amazon', 'Adobe', 'Meta', 'Apple', 'Salesforce',
+  'Goldman Sachs', 'PayPal', 'Visa', 'Uber',
 ]);
-import { Colors, Typography, Spacing, Radius } from '../../theme/tokens';
 
 export interface Filters {
   work_type?: string;
@@ -56,6 +55,7 @@ const SALARY_RANGES = [
 
 export function FilterSheet({ visible, current, onApply, onClose }: Props) {
   const [local, setLocal] = useState<Filters>(current);
+  const { colors } = useTheme();
 
   const handleReset = () => setLocal({});
 
@@ -78,38 +78,15 @@ export function FilterSheet({ visible, current, onApply, onClose }: Props) {
   const selectedCompanies = local.companies ?? [];
   const selectedWorkTypes = local.work_types ?? (local.work_type ? [local.work_type] : []);
 
-  const Chips = ({
-    options, field, label,
-  }: { options: string[]; field: keyof Omit<Filters, 'companies' | 'work_types'>; label: string }) => (
-    <View style={styles.section}>
-      <Text style={styles.sectionLabel}>{label}</Text>
-      <View style={styles.chipRow}>
-        {options.map((opt) => (
-          <TouchableOpacity
-            key={opt}
-            style={[styles.chip, local[field] === opt && styles.chipActive]}
-            onPress={() =>
-              setLocal((f) => ({ ...f, [field]: f[field] === opt ? undefined : opt }))
-            }
-          >
-            <Text style={[styles.chipText, local[field] === opt && styles.chipTextActive]}>
-              {opt}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-    </View>
-  );
-
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <View style={styles.container}>
-        <View style={styles.handle} />
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <View style={[styles.handle, { backgroundColor: colors.border }]} />
 
         <View style={styles.header}>
-          <Text style={styles.title}>Filters</Text>
+          <Text style={[styles.title, { color: colors.textPrimary }]}>Filters</Text>
           <TouchableOpacity onPress={handleReset}>
-            <Text style={styles.resetText}>Reset</Text>
+            <Text style={[styles.resetText, { color: colors.danger }]}>Reset</Text>
           </TouchableOpacity>
         </View>
 
@@ -118,29 +95,32 @@ export function FilterSheet({ visible, current, onApply, onClose }: Props) {
           {/* ── Company Multi-Select ─────────────────────────────────── */}
           <View style={styles.section}>
             <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionLabel}>Companies</Text>
+              <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>Companies</Text>
               {selectedCompanies.length > 0 && (
-                <Text style={styles.selectedCount}>{selectedCompanies.length} selected</Text>
+                <View style={[styles.selectedBadge, { backgroundColor: colors.primary + '18' }]}>
+                  <Text style={[styles.selectedCount, { color: colors.primary }]}>{selectedCompanies.length}</Text>
+                </View>
               )}
             </View>
             <View style={styles.chipRow}>
               {ALL_FILTER_COMPANIES.map((name) => {
                 const isSelected = selectedCompanies.includes(name);
-                const isFintech = FINTECH_COMPANIES.has(name);
+                const isTop = TOP_COMPANIES.has(name);
                 return (
                   <TouchableOpacity
                     key={name}
                     style={[
                       styles.chip,
-                      isFintech && styles.chipFintech,
-                      isSelected && styles.chipActive,
+                      { borderColor: colors.border, backgroundColor: colors.surfaceElevated },
+                      isTop && !isSelected && { borderColor: colors.primary + '40', backgroundColor: colors.primary + '08' },
+                      isSelected && { borderColor: colors.primary, backgroundColor: colors.primary + '22' },
                     ]}
                     onPress={() => toggleCompany(name)}
                   >
                     <Text style={[
                       styles.chipText,
-                      isFintech && styles.chipTextFintech,
-                      isSelected && styles.chipTextActive,
+                      { color: colors.textSecondary },
+                      isSelected && { color: colors.primary },
                     ]}>
                       {name}
                     </Text>
@@ -153,9 +133,11 @@ export function FilterSheet({ visible, current, onApply, onClose }: Props) {
           {/* ── Work Type (Multi-Select) ───────────────────────────── */}
           <View style={styles.section}>
             <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionLabel}>Work Type</Text>
+              <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>Work Type</Text>
               {selectedWorkTypes.length > 0 && (
-                <Text style={styles.selectedCount}>{selectedWorkTypes.length} selected</Text>
+                <View style={[styles.selectedBadge, { backgroundColor: colors.primary + '18' }]}>
+                  <Text style={[styles.selectedCount, { color: colors.primary }]}>{selectedWorkTypes.length}</Text>
+                </View>
               )}
             </View>
             <View style={styles.chipRow}>
@@ -164,12 +146,18 @@ export function FilterSheet({ visible, current, onApply, onClose }: Props) {
                 return (
                   <TouchableOpacity
                     key={wt}
-                    style={[styles.chip, isSelected && styles.chipActive]}
+                    style={[
+                      styles.chip,
+                      { borderColor: colors.border, backgroundColor: colors.surfaceElevated },
+                      isSelected && { borderColor: colors.primary, backgroundColor: colors.primary + '22' },
+                    ]}
                     onPress={() => toggleWorkType(wt)}
                   >
-                    <Text style={[styles.chipText, isSelected && styles.chipTextActive]}>
-                      {wt}
-                    </Text>
+                    <Text style={[
+                      styles.chipText,
+                      { color: colors.textSecondary },
+                      isSelected && { color: colors.primary },
+                    ]}>{wt}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -177,21 +165,50 @@ export function FilterSheet({ visible, current, onApply, onClose }: Props) {
           </View>
 
           {/* ── Experience Level ─────────────────────────────────────── */}
-          <Chips options={EXP_LEVELS} field="experience_level" label="Experience Level" />
+          <View style={styles.section}>
+            <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>Experience Level</Text>
+            <View style={styles.chipRow}>
+              {EXP_LEVELS.map((opt) => (
+                <TouchableOpacity
+                  key={opt}
+                  style={[
+                    styles.chip,
+                    { borderColor: colors.border, backgroundColor: colors.surfaceElevated },
+                    local.experience_level === opt && { borderColor: colors.primary, backgroundColor: colors.primary + '22' },
+                  ]}
+                  onPress={() =>
+                    setLocal((f) => ({ ...f, experience_level: f.experience_level === opt ? undefined : opt }))
+                  }
+                >
+                  <Text style={[
+                    styles.chipText,
+                    { color: colors.textSecondary },
+                    local.experience_level === opt && { color: colors.primary },
+                  ]}>{opt}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
 
           {/* ── Min Salary ───────────────────────────────────────────── */}
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Min. Salary</Text>
+            <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>Min. Salary</Text>
             <View style={styles.chipRow}>
               {SALARY_RANGES.map((r) => (
                 <TouchableOpacity
                   key={String(r.value)}
-                  style={[styles.chip, local.salary_min === r.value && styles.chipActive]}
+                  style={[
+                    styles.chip,
+                    { borderColor: colors.border, backgroundColor: colors.surfaceElevated },
+                    local.salary_min === r.value && { borderColor: colors.primary, backgroundColor: colors.primary + '22' },
+                  ]}
                   onPress={() => setLocal((f) => ({ ...f, salary_min: r.value }))}
                 >
-                  <Text style={[styles.chipText, local.salary_min === r.value && styles.chipTextActive]}>
-                    {r.label}
-                  </Text>
+                  <Text style={[
+                    styles.chipText,
+                    { color: colors.textSecondary },
+                    local.salary_min === r.value && { color: colors.primary },
+                  ]}>{r.label}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -199,11 +216,12 @@ export function FilterSheet({ visible, current, onApply, onClose }: Props) {
 
         </ScrollView>
 
-        <View style={styles.actions}>
-          <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>
-            <Text style={styles.cancelBtnText}>Cancel</Text>
+        <View style={[styles.actions, { borderTopColor: colors.border }]}>
+          <TouchableOpacity style={[styles.cancelBtn, { borderColor: colors.border }]} onPress={onClose}>
+            <Text style={[styles.cancelBtnText, { color: colors.textSecondary }]}>Cancel</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.applyBtn} onPress={() => onApply(local)}>
+          <TouchableOpacity style={[styles.applyBtn, { backgroundColor: colors.primary }]} onPress={() => onApply(local)}>
+            <Feather name="check" size={15} color="#FFFFFF" />
             <Text style={styles.applyBtnText}>Apply Filters</Text>
           </TouchableOpacity>
         </View>
@@ -213,18 +231,17 @@ export function FilterSheet({ visible, current, onApply, onClose }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background, paddingHorizontal: Spacing['2xl'] },
+  container: { flex: 1, paddingHorizontal: Spacing['2xl'] },
   handle: {
     width: 36, height: 4, borderRadius: Radius.full,
-    backgroundColor: Colors.border, alignSelf: 'center',
-    marginTop: Spacing.md, marginBottom: Spacing.base,
+    alignSelf: 'center', marginTop: Spacing.md, marginBottom: Spacing.base,
   },
   header: {
     flexDirection: 'row', alignItems: 'center',
     justifyContent: 'space-between', marginBottom: Spacing.lg,
   },
-  title: { fontSize: Typography.xl, fontWeight: '800', color: Colors.textPrimary },
-  resetText: { fontSize: Typography.base, color: Colors.danger, fontWeight: '600' },
+  title: { fontSize: Typography.xl, fontWeight: '800' },
+  resetText: { fontSize: Typography.sm, fontWeight: '600' },
   content: { paddingBottom: 120 },
   section: { marginBottom: Spacing.xl },
   sectionHeaderRow: {
@@ -232,41 +249,33 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between', marginBottom: Spacing.md,
   },
   sectionLabel: {
-    fontSize: Typography.sm, fontWeight: '700', color: Colors.textMuted,
-    textTransform: 'uppercase', letterSpacing: 1,
+    fontSize: Typography.xs, fontWeight: '700',
+    textTransform: 'uppercase', letterSpacing: 1.2,
   },
-  selectedCount: {
-    fontSize: Typography.xs, fontWeight: '700', color: Colors.primary,
-    backgroundColor: Colors.primary + '22', paddingHorizontal: 8,
-    paddingVertical: 2, borderRadius: Radius.full,
+  selectedBadge: {
+    paddingHorizontal: 8, paddingVertical: 2,
+    borderRadius: Radius.full,
   },
+  selectedCount: { fontSize: Typography.xs, fontWeight: '800' },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
   chip: {
-    flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm,
     borderRadius: Radius.full, borderWidth: 1,
-    borderColor: Colors.border, backgroundColor: Colors.surfaceElevated,
   },
-  chipFintech: {
-    borderColor: '#FFD700' + '70',
-    backgroundColor: '#FFD700' + '12',
-  },
-  chipActive: { borderColor: Colors.primary, backgroundColor: Colors.primary + '22' },
-  chipText: { fontSize: Typography.sm, color: Colors.textSecondary, fontWeight: '600', textTransform: 'capitalize' },
-  chipTextFintech: { color: '#9A7000' },
-  chipTextActive: { color: Colors.primary },
+  chipText: { fontSize: Typography.sm, fontWeight: '600', textTransform: 'capitalize' },
   actions: {
     flexDirection: 'row', gap: Spacing.md,
     paddingBottom: 48, paddingTop: Spacing.base,
+    borderTopWidth: StyleSheet.hairlineWidth,
   },
   cancelBtn: {
-    flex: 1, paddingVertical: 15, borderRadius: Radius.xl,
-    borderWidth: 1, borderColor: Colors.border, alignItems: 'center',
+    flex: 1, paddingVertical: 14, borderRadius: Radius.xl,
+    borderWidth: 1, alignItems: 'center',
   },
-  cancelBtnText: { fontSize: Typography.base, fontWeight: '600', color: Colors.textSecondary },
+  cancelBtnText: { fontSize: Typography.base, fontWeight: '600' },
   applyBtn: {
-    flex: 2, paddingVertical: 15, borderRadius: Radius.xl,
-    backgroundColor: Colors.primary, alignItems: 'center',
+    flex: 2, paddingVertical: 14, borderRadius: Radius.xl,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
   },
-  applyBtnText: { fontSize: Typography.base, fontWeight: '700', color: Colors.textPrimary },
+  applyBtnText: { fontSize: Typography.base, fontWeight: '700', color: '#FFFFFF' },
 });

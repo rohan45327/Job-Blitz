@@ -3,11 +3,13 @@ import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   ActivityIndicator, Linking, Alert, Share
 } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParams } from '../../../App';
 import { api } from '../../api/client';
-import { Colors, Typography, Spacing, Radius, Shadow } from '../../theme/tokens';
+import { Typography, Spacing, Radius, Shadow } from '../../theme/tokens';
+import { useTheme } from '../../theme/ThemeContext';
 import { CoverLetterModal } from '../../components/job/CoverLetterModal';
 import { cleanText } from '../../utils/cleanText';
 
@@ -15,6 +17,7 @@ type Props = NativeStackScreenProps<RootStackParams, 'JobDetail'>;
 
 export function JobDetailScreen({ route, navigation }: Props) {
   const { jobId } = route.params;
+  const { colors } = useTheme();
   const qc = useQueryClient();
   const [showCoverLetter, setShowCoverLetter] = useState(false);
 
@@ -27,15 +30,15 @@ export function JobDetailScreen({ route, navigation }: Props) {
     mutationFn: () => api.createApplication(jobId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['applications'] });
-      Alert.alert('✅ Saved!', 'Job added to your tracker.');
+      Alert.alert('Saved', 'Job added to your tracker.');
     },
     onError: (e: any) => Alert.alert('Error', e.message),
   });
 
   if (isLoading || !job) {
     return (
-      <View style={styles.loading}>
-        <ActivityIndicator size="large" color={Colors.primary} />
+      <View style={[styles.loading, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -45,10 +48,10 @@ export function JobDetailScreen({ route, navigation }: Props) {
     : 'Salary not disclosed';
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Back button */}
       <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-        <Text style={styles.backBtnText}>← Back</Text>
+        <Feather name="arrow-left" size={20} color={colors.textSecondary} />
       </TouchableOpacity>
 
       <ScrollView
@@ -58,41 +61,60 @@ export function JobDetailScreen({ route, navigation }: Props) {
       >
         {/* Company Header */}
         <View style={styles.companyHeader}>
-          <View style={styles.companyLogo}>
-            <Text style={styles.companyLogoText}>
+          <View style={[styles.companyLogo, { backgroundColor: colors.primary + '18', borderColor: colors.primary + '30' }]}>
+            <Text style={[styles.companyLogoText, { color: colors.primary }]}>
               {(job.company.name?.[0] ?? '?').toUpperCase()}
             </Text>
           </View>
           <View style={styles.companyMeta}>
-            <Text style={styles.companyName}>{cleanText(job.company.name)}</Text>
-            <Text style={styles.companyDomain}>{job.company.domain ?? ''}</Text>
+            <Text style={[styles.companyName, { color: colors.textPrimary }]}>{cleanText(job.company.name)}</Text>
+            <Text style={[styles.companyDomain, { color: colors.textMuted }]}>{job.company.domain ?? ''}</Text>
           </View>
           <TouchableOpacity
+            style={[styles.shareBtn, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}
             onPress={() => Share.share({ message: `${cleanText(job.title)} at ${cleanText(job.company.name)}: ${job.apply_url}` })}
           >
-            <Text style={styles.shareIcon}>↑</Text>
+            <Feather name="share" size={15} color={colors.textSecondary} />
           </TouchableOpacity>
         </View>
 
         {/* Job Title */}
-        <Text style={styles.jobTitle}>{cleanText(job.title)}</Text>
+        <Text style={[styles.jobTitle, { color: colors.textPrimary }]}>{cleanText(job.title)}</Text>
 
         {/* Meta pills */}
         <View style={styles.pills}>
-          {job.location && <View style={styles.pill}><Text style={styles.pillText}>📍 {cleanText(job.location)}</Text></View>}
-          {job.work_type && <View style={styles.pill}><Text style={styles.pillText}>🏠 {job.work_type}</Text></View>}
-          {job.experience_level && <View style={styles.pill}><Text style={styles.pillText}>📈 {job.experience_level}</Text></View>}
-          <View style={styles.pill}><Text style={styles.pillText}>💰 {salaryText}</Text></View>
+          {job.location && (
+            <View style={[styles.pill, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
+              <Feather name="map-pin" size={11} color={colors.textMuted} />
+              <Text style={[styles.pillText, { color: colors.textSecondary }]}>{cleanText(job.location)}</Text>
+            </View>
+          )}
+          {job.work_type && (
+            <View style={[styles.pill, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
+              <Feather name="home" size={11} color={colors.textMuted} />
+              <Text style={[styles.pillText, { color: colors.textSecondary }]}>{job.work_type}</Text>
+            </View>
+          )}
+          {job.experience_level && (
+            <View style={[styles.pill, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
+              <Feather name="trending-up" size={11} color={colors.textMuted} />
+              <Text style={[styles.pillText, { color: colors.textSecondary }]}>{job.experience_level}</Text>
+            </View>
+          )}
+          <View style={[styles.pill, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
+            <Feather name="dollar-sign" size={11} color={colors.textMuted} />
+            <Text style={[styles.pillText, { color: colors.textSecondary }]}>{salaryText}</Text>
+          </View>
         </View>
 
         {/* Skills */}
         {job.skills.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Skills Required</Text>
+            <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>Skills Required</Text>
             <View style={styles.skills}>
               {job.skills.map((s) => (
-                <View key={s.id} style={styles.skillChip}>
-                  <Text style={styles.skillText}>{s.name}</Text>
+                <View key={s.id} style={[styles.skillChip, { backgroundColor: colors.primary + '14' }]}>
+                  <Text style={[styles.skillText, { color: colors.primaryLight }]}>{s.name}</Text>
                 </View>
               ))}
             </View>
@@ -102,34 +124,42 @@ export function JobDetailScreen({ route, navigation }: Props) {
         {/* Description */}
         {job.description && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Job Description</Text>
-            <Text style={styles.description}>{cleanText(job.description)}</Text>
+            <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>Job Description</Text>
+            <Text style={[styles.description, { color: colors.textSecondary }]}>{cleanText(job.description)}</Text>
           </View>
         )}
       </ScrollView>
 
       {/* Bottom CTA */}
-      <View style={styles.bottomBar}>
+      <View style={[styles.bottomBar, { backgroundColor: colors.background, borderTopColor: colors.border }]}>
         <TouchableOpacity
-          style={styles.secondaryBtn}
+          style={[styles.secondaryBtn, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}
           onPress={() => setShowCoverLetter(true)}
         >
-          <Text style={styles.secondaryBtnText}>✍️ Cover Letter</Text>
+          <Feather name="edit-2" size={14} color={colors.textSecondary} />
+          <Text style={[styles.secondaryBtnText, { color: colors.textSecondary }]}>Cover Letter</Text>
         </TouchableOpacity>
+
         <TouchableOpacity
-          style={styles.primaryBtn}
+          style={[styles.primaryBtn, { backgroundColor: colors.primary }]}
           onPress={() => Linking.openURL(job.apply_url)}
           activeOpacity={0.85}
         >
-          <Text style={styles.primaryBtnText}>Apply Now →</Text>
+          <Text style={styles.primaryBtnText}>Apply Now</Text>
+          <Feather name="arrow-right" size={15} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
 
       {/* Save to tracker */}
       <TouchableOpacity style={styles.saveBtn} onPress={() => applyMutation.mutate()}>
         {applyMutation.isPending
-          ? <ActivityIndicator size="small" color={Colors.primary} />
-          : <Text style={styles.saveBtnText}>+ Save to Tracker</Text>
+          ? <ActivityIndicator size="small" color={colors.primary} />
+          : (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <Feather name="bookmark" size={13} color={colors.textMuted} />
+              <Text style={[styles.saveBtnText, { color: colors.textMuted }]}>Save to Tracker</Text>
+            </View>
+          )
         }
       </TouchableOpacity>
 
@@ -143,38 +173,69 @@ export function JobDetailScreen({ route, navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
-  loading: { flex: 1, backgroundColor: Colors.background, alignItems: 'center', justifyContent: 'center' },
-  backBtn: { paddingHorizontal: Spacing['2xl'], paddingTop: 56, paddingBottom: Spacing.base },
-  backBtnText: { fontSize: Typography.base, color: Colors.primary, fontWeight: '600' },
+  container: { flex: 1 },
+  loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  backBtn: { paddingHorizontal: Spacing['2xl'], paddingTop: 56, paddingBottom: Spacing.base, alignSelf: 'flex-start' },
   scroll: { flex: 1 },
   scrollContent: { paddingHorizontal: Spacing['2xl'], paddingBottom: 160 },
   companyHeader: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, marginBottom: Spacing.lg },
   companyLogo: {
-    width: 52, height: 52, borderRadius: Radius.lg,
-    backgroundColor: Colors.primary + '22', alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1, borderColor: Colors.primary + '40',
+    width: 48, height: 48, borderRadius: Radius.lg,
+    alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1,
   },
-  companyLogoText: { fontSize: Typography.xl, fontWeight: '800', color: Colors.primary },
+  companyLogoText: { fontSize: Typography.xl, fontWeight: '800' },
   companyMeta: { flex: 1 },
-  companyName: { fontSize: Typography.md, fontWeight: '700', color: Colors.textPrimary },
-  companyDomain: { fontSize: Typography.sm, color: Colors.textMuted },
-  shareIcon: { fontSize: Typography.lg, color: Colors.textSecondary },
-  jobTitle: { fontSize: Typography['2xl'], fontWeight: '800', color: Colors.textPrimary, letterSpacing: -0.5, marginBottom: Spacing.lg, lineHeight: Typography['2xl'] * 1.25 },
+  companyName: { fontSize: Typography.md, fontWeight: '700' },
+  companyDomain: { fontSize: Typography.sm, marginTop: 1 },
+  shareBtn: {
+    width: 34, height: 34, borderRadius: Radius.full,
+    borderWidth: 1, alignItems: 'center', justifyContent: 'center',
+  },
+  jobTitle: {
+    fontSize: Typography['2xl'], fontWeight: '800',
+    letterSpacing: -0.5, marginBottom: Spacing.lg,
+    lineHeight: Typography['2xl'] * 1.25,
+  },
   pills: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm, marginBottom: Spacing.xl },
-  pill: { backgroundColor: Colors.surfaceElevated, paddingHorizontal: Spacing.md, paddingVertical: 6, borderRadius: Radius.full, borderWidth: 1, borderColor: Colors.border },
-  pillText: { fontSize: Typography.sm, color: Colors.textSecondary },
+  pill: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    paddingHorizontal: Spacing.md, paddingVertical: 6,
+    borderRadius: Radius.full, borderWidth: 1,
+  },
+  pillText: { fontSize: Typography.sm },
   section: { marginBottom: Spacing.xl },
-  sectionTitle: { fontSize: Typography.sm, fontWeight: '700', color: Colors.textMuted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: Spacing.md },
+  sectionTitle: {
+    fontSize: Typography.xs, fontWeight: '700',
+    textTransform: 'uppercase', letterSpacing: 1.2,
+    marginBottom: Spacing.md,
+  },
   skills: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
-  skillChip: { backgroundColor: Colors.primary + '15', paddingHorizontal: Spacing.md, paddingVertical: Spacing.xs, borderRadius: Radius.sm },
-  skillText: { fontSize: Typography.sm, color: Colors.primaryLight, fontWeight: '600' },
-  description: { fontSize: Typography.base, color: Colors.textSecondary, lineHeight: Typography.base * 1.7 },
-  bottomBar: { position: 'absolute', bottom: 48, left: Spacing['2xl'], right: Spacing['2xl'], flexDirection: 'row', gap: Spacing.md },
-  primaryBtn: { flex: 1, backgroundColor: Colors.primary, borderRadius: Radius.xl, paddingVertical: 15, alignItems: 'center' },
-  primaryBtnText: { fontSize: Typography.base, fontWeight: '700', color: Colors.textPrimary },
-  secondaryBtn: { backgroundColor: Colors.surfaceElevated, borderRadius: Radius.xl, paddingVertical: 15, paddingHorizontal: Spacing.lg, borderWidth: 1, borderColor: Colors.border, alignItems: 'center', justifyContent: 'center' },
-  secondaryBtnText: { fontSize: Typography.sm, fontWeight: '600', color: Colors.textSecondary },
-  saveBtn: { position: 'absolute', bottom: 14, alignSelf: 'center', paddingVertical: Spacing.xs, paddingHorizontal: Spacing.lg },
-  saveBtnText: { fontSize: Typography.sm, color: Colors.textMuted, fontWeight: '600' },
+  skillChip: { paddingHorizontal: Spacing.md, paddingVertical: Spacing.xs, borderRadius: Radius.sm },
+  skillText: { fontSize: Typography.sm, fontWeight: '600' },
+  description: { fontSize: Typography.base, lineHeight: Typography.base * 1.7 },
+  bottomBar: {
+    position: 'absolute',
+    bottom: 48,
+    left: Spacing['2xl'],
+    right: Spacing['2xl'],
+    flexDirection: 'row',
+    gap: Spacing.md,
+  },
+  primaryBtn: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 6, borderRadius: Radius.xl, paddingVertical: 14,
+  },
+  primaryBtnText: { fontSize: Typography.base, fontWeight: '700', color: '#FFFFFF' },
+  secondaryBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    borderRadius: Radius.xl, paddingVertical: 14, paddingHorizontal: Spacing.base,
+    borderWidth: 1,
+  },
+  secondaryBtnText: { fontSize: Typography.sm, fontWeight: '600' },
+  saveBtn: {
+    position: 'absolute', bottom: 16, alignSelf: 'center',
+    paddingVertical: Spacing.xs, paddingHorizontal: Spacing.lg,
+  },
+  saveBtnText: { fontSize: Typography.sm, fontWeight: '600' },
 });

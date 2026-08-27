@@ -1,41 +1,71 @@
 // ─── Design System Tokens ───────────────────────────────────────────────────
+// Twitter/X-inspired minimalist: pure black (dark) ↔ pure white (light)
 
 export const Colors = {
-  // Brand
-  primary: '#6C63FF',       // electric violet
-  primaryLight: '#9D96FF',
-  primaryDark: '#4A43CC',
-  accent: '#00D9FF',        // electric cyan
-  accentDark: '#00AACC',
+  // Brand — X/Twitter Blue
+  primary: '#1D9BF0',
+  primaryLight: '#60B8F5',
+  primaryDark: '#1678C1',
+  accent: '#1D9BF0',
+  accentDark: '#1678C1',
 
   // Status
-  success: '#00E096',
+  success: '#00BA7C',
   warning: '#FFB938',
-  danger: '#FF4D6A',
-  info: '#60A5FA',
+  danger: '#F4212E',
+  info: '#1D9BF0',
 
-  // Neutrals (dark theme)
-  background: '#0A0A0F',
-  surface: '#12121A',
-  surfaceElevated: '#1C1C28',
-  surfaceHighlight: '#252535',
-  border: '#2A2A3E',
-  borderLight: '#3A3A54',
+  // Neutrals — DARK mode (major black, minor white)
+  background: '#000000',
+  surface: '#0A0A0A',
+  surfaceElevated: '#111111',
+  surfaceHighlight: '#1A1A1A',
+  border: '#2F3336',
+  borderLight: '#3E4144',
 
-  // Text
-  textPrimary: '#F0F0FF',
-  textSecondary: '#9898B8',
-  textMuted: '#5C5C7A',
-  textInverse: '#0A0A0F',
+  // Text — dark mode
+  textPrimary: '#E7E9EA',
+  textSecondary: '#71767B',
+  textMuted: '#3E4144',
+  textInverse: '#000000',
 
   // Overlays
-  overlay: 'rgba(10, 10, 15, 0.85)',
-  glass: 'rgba(255, 255, 255, 0.05)',
-  glassBorder: 'rgba(255, 255, 255, 0.1)',
+  overlay: 'rgba(0, 0, 0, 0.9)',
+  glass: 'rgba(255, 255, 255, 0.04)',
+  glassBorder: 'rgba(255, 255, 255, 0.08)',
+} as const;
+
+export const LightColors = {
+  primary: '#1D9BF0',
+  primaryLight: '#1678C1',
+  primaryDark: '#0F6AB0',
+  accent: '#1D9BF0',
+  accentDark: '#0F6AB0',
+
+  success: '#00BA7C',
+  warning: '#D97706',
+  danger: '#DC2626',
+  info: '#1D9BF0',
+
+  // LIGHT mode (major white, minor black)
+  background: '#FFFFFF',
+  surface: '#F7F9F9',
+  surfaceElevated: '#EFF3F4',
+  surfaceHighlight: '#E7E7E7',
+  border: '#CFD9DE',
+  borderLight: '#E2E8F0',
+
+  textPrimary: '#0F1419',
+  textSecondary: '#536471',
+  textMuted: '#8899A6',
+  textInverse: '#FFFFFF',
+
+  overlay: 'rgba(255, 255, 255, 0.9)',
+  glass: 'rgba(0, 0, 0, 0.03)',
+  glassBorder: 'rgba(0, 0, 0, 0.06)',
 } as const;
 
 export const Typography = {
-  // Font families (requires loading via expo-font or system)
   fontFamily: {
     regular: 'System',
     medium: 'System',
@@ -43,7 +73,6 @@ export const Typography = {
     bold: 'System',
   },
 
-  // Font sizes
   xs: 11,
   sm: 13,
   base: 15,
@@ -54,7 +83,6 @@ export const Typography = {
   '3xl': 34,
   '4xl': 42,
 
-  // Line heights
   lineHeight: {
     tight: 1.2,
     normal: 1.5,
@@ -76,34 +104,34 @@ export const Spacing = {
 } as const;
 
 export const Radius = {
-  sm: 6,
-  md: 10,
-  lg: 14,
-  xl: 20,
-  '2xl': 28,
+  sm: 4,
+  md: 8,
+  lg: 12,
+  xl: 16,
+  '2xl': 24,
   full: 9999,
 } as const;
 
 export const Shadow = {
   sm: {
-    shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
     elevation: 2,
   },
   md: {
-    shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-    elevation: 5,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 4,
   },
   lg: {
-    shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.25,
-    shadowRadius: 20,
-    elevation: 10,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 16,
+    elevation: 8,
   },
 } as const;

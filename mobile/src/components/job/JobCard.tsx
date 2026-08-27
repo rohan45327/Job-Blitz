@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Image } from 'react-native';
+import { Feather, Ionicons } from '@expo/vector-icons';
 import { MatchedJobOut } from '../../api/client';
 import { Typography, Spacing, Radius, Shadow } from '../../theme/tokens';
 import { useTheme } from '../../theme/ThemeContext';
@@ -18,7 +19,7 @@ export function JobCard({ matched, onPress, onQuickApply }: Props) {
   const [logoError, setLogoError] = useState(false);
 
   const workTypeColor =
-    job.work_type === 'remote' ? colors.success : job.work_type === 'hybrid' ? colors.warning : colors.accent;
+    job.work_type === 'remote' ? colors.success : job.work_type === 'hybrid' ? colors.warning : colors.textSecondary;
 
   const scoreColor =
     match_score >= 0.75 ? colors.success : match_score >= 0.6 ? colors.warning : colors.textMuted;
@@ -36,22 +37,20 @@ export function JobCard({ matched, onPress, onQuickApply }: Props) {
     <TouchableOpacity
       style={[
         styles.card,
-        { backgroundColor: colors.surface, borderColor: is_high_match ? colors.primary + '80' : colors.border },
-        job.company.is_top_company && {
-          shadowColor: '#FFD700',
-          shadowOpacity: 0.18,
-          shadowRadius: 8,
-          elevation: 5,
+        {
+          backgroundColor: colors.surface,
+          borderColor: is_high_match ? colors.primary + '60' : colors.border,
         },
       ]}
       onPress={onPress}
-      activeOpacity={0.85}
+      activeOpacity={0.82}
     >
       {/* High Match Banner */}
       {is_high_match && (
-        <View style={[styles.highMatchBanner, { backgroundColor: colors.primary + '20', borderColor: colors.primary }]}>
+        <View style={[styles.highMatchBanner, { backgroundColor: colors.primary + '15', borderColor: colors.primary + '40' }]}>
+          <Feather name="zap" size={11} color={colors.primary} />
           <Text style={[styles.highMatchText, { color: colors.primary }]}>
-            ⚡ 75%+ Strong Match {matched_resume_category ? `• Bound to ${matched_resume_category} Resume` : ''}
+            {scorePercent}% Strong Match{matched_resume_category ? `  ·  ${matched_resume_category}` : ''}
           </Text>
         </View>
       )}
@@ -81,16 +80,23 @@ export function JobCard({ matched, onPress, onQuickApply }: Props) {
             )}
           </View>
           <View style={{ flex: 1 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-              {job.company.is_top_company && <Text style={{ fontSize: 14 }}>👑</Text>}
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+              {job.company.is_top_company && (
+                <Ionicons name="star" size={11} color="#F5A623" style={{ marginTop: 1 }} />
+              )}
               <Text style={[styles.companyName, { color: colors.textSecondary }]}>{cleanText(job.company.name)}</Text>
             </View>
-            <Text style={[styles.jobLocation, { color: colors.textMuted }]}>{cleanText(job.location) || 'Remote / Flexible'}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
+              <Feather name="map-pin" size={10} color={colors.textMuted} />
+              <Text style={[styles.jobLocation, { color: colors.textMuted }]}>
+                {cleanText(job.location) || 'Remote / Flexible'}
+              </Text>
+            </View>
           </View>
         </View>
 
         {/* Match Score Badge */}
-        <View style={[styles.scoreBadge, { backgroundColor: scoreColor + '20', borderColor: scoreColor }]}>
+        <View style={[styles.scoreBadge, { backgroundColor: scoreColor + '18', borderColor: scoreColor + '60' }]}>
           <Text style={[styles.scoreText, { color: scoreColor }]}>{scorePercent}%</Text>
         </View>
       </View>
@@ -103,7 +109,7 @@ export function JobCard({ matched, onPress, onQuickApply }: Props) {
       {/* Tags */}
       <View style={styles.tags}>
         {job.work_type && (
-          <View style={[styles.tag, { backgroundColor: colors.surfaceElevated, borderColor: workTypeColor + '60' }]}>
+          <View style={[styles.tag, { backgroundColor: colors.surfaceElevated, borderColor: workTypeColor + '50' }]}>
             <Text style={[styles.tagText, { color: workTypeColor }]}>{job.work_type}</Text>
           </View>
         )}
@@ -123,7 +129,7 @@ export function JobCard({ matched, onPress, onQuickApply }: Props) {
       {topSkills.length > 0 && (
         <View style={styles.skills}>
           {topSkills.map((s) => (
-            <View key={s.id} style={[styles.skillChip, { backgroundColor: colors.primary + '18' }]}>
+            <View key={s.id} style={[styles.skillChip, { backgroundColor: colors.primary + '14' }]}>
               <Text style={[styles.skillText, { color: colors.primaryLight }]}>{s.name}</Text>
             </View>
           ))}
@@ -152,9 +158,10 @@ export function JobCard({ matched, onPress, onQuickApply }: Props) {
           <TouchableOpacity
             style={[styles.quickApplyBtn, { backgroundColor: colors.primary }]}
             onPress={onQuickApply}
-            activeOpacity={0.85}
+            activeOpacity={0.82}
           >
-            <Text style={styles.quickApplyText}>⚡ One-Click Apply</Text>
+            <Feather name="zap" size={12} color="#FFFFFF" />
+            <Text style={styles.quickApplyText}>Apply</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -165,75 +172,77 @@ export function JobCard({ matched, onPress, onQuickApply }: Props) {
 const styles = StyleSheet.create({
   card: {
     borderRadius: Radius.xl,
-    padding: Spacing.lg,
-    marginVertical: Spacing.sm,
+    padding: Spacing.base,
+    marginVertical: 6,
     borderWidth: 1,
     ...Shadow.sm,
   },
   highMatchBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
     borderRadius: Radius.md,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 6,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 5,
     borderWidth: 1,
     marginBottom: Spacing.md,
+    alignSelf: 'flex-start',
   },
   highMatchText: {
     fontSize: Typography.xs,
-    fontWeight: '800',
-    letterSpacing: 0.3,
+    fontWeight: '700',
+    letterSpacing: 0.2,
   },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.sm,
   },
   companyInfo: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, flex: 1 },
   companyLogo: {
-    width: 42,
-    height: 42,
+    width: 40,
+    height: 40,
     borderRadius: Radius.md,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
     overflow: 'hidden',
   },
-  logoImage: {
-    width: 32,
-    height: 32,
-    borderRadius: Radius.md - 2,
-  },
+  logoImage: { width: 30, height: 30 },
   companyLogoText: { fontSize: Typography.md, fontWeight: '800' },
   companyName: { fontSize: Typography.sm, fontWeight: '600' },
-  jobLocation: { fontSize: Typography.xs, marginTop: 2 },
+  jobLocation: { fontSize: Typography.xs },
   scoreBadge: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 6,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 5,
     borderRadius: Radius.full,
     borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
+    minWidth: 46,
   },
   scoreText: { fontSize: Typography.xs, fontWeight: '800' },
   jobTitle: {
-    fontSize: Typography.lg,
+    fontSize: Typography.md,
     fontWeight: '700',
-    marginBottom: Spacing.md,
-    letterSpacing: -0.3,
+    marginBottom: Spacing.sm,
+    letterSpacing: -0.2,
+    lineHeight: Typography.md * 1.3,
   },
-  tags: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm, marginBottom: Spacing.md },
+  tags: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.xs, marginBottom: Spacing.sm },
   tag: {
     paddingHorizontal: Spacing.sm,
-    paddingVertical: 4,
+    paddingVertical: 3,
     borderRadius: Radius.full,
     borderWidth: 1,
   },
-  tagText: { fontSize: Typography.xs, fontWeight: '600' },
+  tagText: { fontSize: Typography.xs, fontWeight: '600', textTransform: 'capitalize' },
   skills: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: Spacing.xs,
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.sm,
     alignItems: 'center',
   },
   skillChip: {
@@ -247,27 +256,31 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: Spacing.md,
+    paddingTop: Spacing.sm,
     borderTopWidth: 1,
+    marginTop: 2,
   },
   matchBreakdown: { flexDirection: 'row', gap: Spacing.md },
   breakdownItem: { alignItems: 'center', gap: 3 },
   breakdownBar: {
-    width: 32,
-    height: 4,
+    width: 28,
+    height: 3,
     borderRadius: Radius.full,
     overflow: 'hidden',
   },
   breakdownFill: { height: '100%', borderRadius: Radius.full },
-  breakdownLabel: { fontSize: 9, textTransform: 'uppercase' },
+  breakdownLabel: { fontSize: 9, textTransform: 'uppercase', letterSpacing: 0.3 },
   quickApplyBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
     paddingHorizontal: Spacing.md,
-    paddingVertical: 8,
+    paddingVertical: 7,
     borderRadius: Radius.lg,
   },
   quickApplyText: {
     fontSize: Typography.xs,
-    fontWeight: '800',
+    fontWeight: '700',
     color: '#FFFFFF',
   },
 });

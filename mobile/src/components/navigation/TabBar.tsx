@@ -1,14 +1,18 @@
 import React from 'react';
 import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { Feather, Ionicons } from '@expo/vector-icons';
 import { Typography, Spacing, Radius, Shadow } from '../../theme/tokens';
 import { useTheme } from '../../theme/ThemeContext';
 
-const TAB_ICONS: Record<string, string> = {
-  Home: '⚡',
-  Applications: '📋',
-  Watchlist: '👁',
-  Profile: '👤',
+type FeatherName = React.ComponentProps<typeof Feather>['name'];
+type IoniconName = React.ComponentProps<typeof Ionicons>['name'];
+
+const TAB_CONFIG: Record<string, { icon: FeatherName | IoniconName; lib: 'Feather' | 'Ionicons'; label: string }> = {
+  Home:         { icon: 'briefcase',  lib: 'Feather',   label: 'Feed' },
+  Applications: { icon: 'file-text',  lib: 'Feather',   label: 'Applied' },
+  Watchlist:    { icon: 'eye',        lib: 'Feather',   label: 'Watch' },
+  Profile:      { icon: 'user',       lib: 'Feather',   label: 'Profile' },
 };
 
 export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
@@ -18,9 +22,9 @@ export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
     <View style={styles.container}>
       <View style={[styles.bar, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
         {state.routes.map((route, index) => {
-          const { options } = descriptors[route.key];
-          const label = options.tabBarLabel ?? route.name;
           const isFocused = state.index === index;
+          const cfg = TAB_CONFIG[route.name];
+          const iconColor = isFocused ? colors.primary : colors.textMuted;
 
           const onPress = () => {
             const event = navigation.emit({
@@ -36,15 +40,17 @@ export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
           return (
             <TouchableOpacity
               key={route.key}
-              style={[styles.tab, isFocused && { backgroundColor: colors.primary + '20' }]}
+              style={[styles.tab, isFocused && { backgroundColor: colors.primary + '18' }]}
               onPress={onPress}
-              activeOpacity={0.8}
+              activeOpacity={0.75}
             >
-              <Text style={[styles.icon, { opacity: isFocused ? 1 : 0.4 }]}>
-                {TAB_ICONS[route.name] ?? '●'}
-              </Text>
-              <Text style={[styles.label, { color: isFocused ? colors.primary : colors.textMuted }]}>
-                {String(label)}
+              {cfg?.lib === 'Feather' ? (
+                <Feather name={cfg.icon as FeatherName} size={20} color={iconColor} />
+              ) : (
+                <Ionicons name={cfg?.icon as IoniconName} size={20} color={iconColor} />
+              )}
+              <Text style={[styles.label, { color: iconColor }]}>
+                {cfg?.label ?? route.name}
               </Text>
             </TouchableOpacity>
           );
@@ -57,17 +63,17 @@ export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    bottom: 24,
-    left: 20,
-    right: 20,
+    bottom: 20,
+    left: 16,
+    right: 16,
   },
   bar: {
     flexDirection: 'row',
     borderRadius: Radius['2xl'],
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    paddingHorizontal: Spacing.xs,
     borderWidth: 1,
-    ...Shadow.lg,
+    ...Shadow.md,
   },
   tab: {
     flex: 1,
@@ -76,13 +82,10 @@ const styles = StyleSheet.create({
     borderRadius: Radius.xl,
     gap: 3,
   },
-  icon: {
-    fontSize: 18,
-  },
   label: {
     fontSize: 10,
     fontWeight: '600',
     textTransform: 'uppercase',
-    letterSpacing: 0.3,
+    letterSpacing: 0.4,
   },
 });

@@ -1,8 +1,9 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
   ActivityIndicator, RefreshControl, Modal, Alert
 } from 'react-native';
+import { Feather, Ionicons } from '@expo/vector-icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -18,7 +19,6 @@ import { RootStackParams } from '../../../App';
 
 type Nav = NativeStackNavigationProp<RootStackParams>;
 
-
 export function HomeScreen() {
   const navigation = useNavigation<Nav>();
   const { colors, isDark, toggleTheme } = useTheme();
@@ -28,8 +28,6 @@ export function HomeScreen() {
   const [showFilters, setShowFilters] = useState(false);
   const [page, setPage] = useState(1);
   const [activeTab, setActiveTab] = useState<'all' | 'high_match'>('all');
-
-  // Automated High-Match Alert Popup Modal state
   const [selectedHighMatch, setSelectedHighMatch] = useState<MatchedJobOut | null>(null);
 
   const { data, isLoading, refetch, isFetching } = useQuery({
@@ -45,11 +43,11 @@ export function HomeScreen() {
   const applyMutation = useMutation({
     mutationFn: (jobId: string) => api.createApplication(jobId),
     onSuccess: () => {
-      Alert.alert('⚡ Application Submitted!', 'Your application has been recorded in your tracker.');
+      Alert.alert('Applied!', 'Your application has been recorded in your tracker.');
       setSelectedHighMatch(null);
       qc.invalidateQueries({ queryKey: ['applications'] });
     },
-    onError: (e: any) => Alert.alert('Application Failed', e.message || 'Please try again.'),
+    onError: (e: any) => Alert.alert('Failed', e.message || 'Please try again.'),
   });
 
   const handleJobPress = useCallback((jobId: string) => {
@@ -64,10 +62,8 @@ export function HomeScreen() {
     Array.isArray(v) ? v.length > 0 : Boolean(v)
   );
 
-  // Backend already sorts: top companies first, then by score
   const allItems = data?.items ?? [];
   const highMatchItems = allItems.filter((i) => i.is_high_match || i.match_score >= 0.75);
-
   const displayItems = activeTab === 'high_match' ? highMatchItems : allItems;
   const totalPages = data?.total_pages ?? 1;
   const totalJobs = data?.total ?? 0;
@@ -75,56 +71,59 @@ export function HomeScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Top Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <View>
-          <Text style={[styles.greeting, { color: colors.textMuted }]}>⚡ Live Job Intelligence</Text>
-          <Text style={[styles.title, { color: colors.textPrimary }]}>Software Feed</Text>
+          <Text style={[styles.greeting, { color: colors.textMuted }]}>Live Intelligence</Text>
+          <Text style={[styles.title, { color: colors.textPrimary }]}>Job Feed</Text>
         </View>
 
         <View style={styles.headerActions}>
-          {/* Theme Toggle Button */}
+          {/* Theme Toggle */}
           <TouchableOpacity
-            style={[styles.themeToggleBtn, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}
+            style={[styles.iconBtn, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}
             onPress={toggleTheme}
             activeOpacity={0.8}
           >
-            <Text style={{ fontSize: 16 }}>{isDark ? '🌙' : '☀️'}</Text>
+            <Feather name={isDark ? 'moon' : 'sun'} size={16} color={colors.textSecondary} />
           </TouchableOpacity>
 
           {/* Filter Button */}
           <TouchableOpacity
             style={[
               styles.filterBtn,
-              { backgroundColor: colors.surfaceElevated, borderColor: hasActiveFilters ? colors.primary : colors.border },
-              hasActiveFilters && { backgroundColor: colors.primary + '22' }
+              { backgroundColor: hasActiveFilters ? colors.primary + '18' : colors.surfaceElevated, borderColor: hasActiveFilters ? colors.primary : colors.border },
             ]}
             onPress={() => setShowFilters(true)}
           >
+            <Feather name="sliders" size={14} color={hasActiveFilters ? colors.primary : colors.textSecondary} />
             <Text style={[styles.filterBtnText, { color: hasActiveFilters ? colors.primary : colors.textSecondary }]}>
-              {hasActiveFilters ? '● Filters' : 'Filter'}
+              {hasActiveFilters ? 'Filtered' : 'Filter'}
             </Text>
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* Navigation Tabs (All Feed vs 75%+ High Matches) */}
+      {/* Navigation Tabs */}
       <View style={[styles.tabBar, { borderBottomColor: colors.border }]}>
         <TouchableOpacity
-          style={[styles.tabItem, activeTab === 'all' && { borderBottomColor: colors.primary, borderBottomWidth: 3 }]}
+          style={[styles.tabItem, activeTab === 'all' && { borderBottomColor: colors.primary, borderBottomWidth: 2 }]}
           onPress={() => setActiveTab('all')}
         >
-          <Text style={[styles.tabText, { color: activeTab === 'all' ? colors.primary : colors.textMuted }]}>
-            All Jobs ({totalJobs})
+          <Text style={[styles.tabText, { color: activeTab === 'all' ? colors.textPrimary : colors.textMuted }]}>
+            All  <Text style={{ color: colors.textMuted, fontWeight: '400' }}>{totalJobs}</Text>
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.tabItem, activeTab === 'high_match' && { borderBottomColor: colors.primary, borderBottomWidth: 3 }]}
+          style={[styles.tabItem, activeTab === 'high_match' && { borderBottomColor: colors.primary, borderBottomWidth: 2 }]}
           onPress={() => setActiveTab('high_match')}
         >
-          <Text style={[styles.tabText, { color: activeTab === 'high_match' ? colors.primary : colors.textMuted }]}>
-            🎯 75%+ Suggested ({highMatchItems.length})
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+            <Feather name="target" size={13} color={activeTab === 'high_match' ? colors.primary : colors.textMuted} />
+            <Text style={[styles.tabText, { color: activeTab === 'high_match' ? colors.textPrimary : colors.textMuted }]}>
+              75%+ Match  <Text style={{ color: colors.textMuted, fontWeight: '400' }}>{highMatchItems.length}</Text>
+            </Text>
+          </View>
         </TouchableOpacity>
       </View>
 
@@ -154,14 +153,14 @@ export function HomeScreen() {
             )}
             ListEmptyComponent={
               <View style={styles.empty}>
-                <Text style={styles.emptyEmoji}>⚡</Text>
+                <Feather name="briefcase" size={40} color={colors.textMuted} />
                 <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>
                   {activeTab === 'high_match' ? 'No 75%+ matches yet' : 'No jobs found'}
                 </Text>
                 <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
                   {activeTab === 'high_match'
-                    ? 'Add category resumes and search keywords in your profile to boost match precision.'
-                    : 'Check back soon as new tech postings are ingested continuously.'}
+                    ? 'Add category resumes and keywords in your profile to boost match precision.'
+                    : 'Check back soon — new postings are ingested continuously.'}
                 </Text>
               </View>
             }
@@ -169,7 +168,7 @@ export function HomeScreen() {
         )}
       </View>
 
-      {/* Pagination Controls — always above the tab bar */}
+      {/* Pagination */}
       {activeTab === 'all' && totalPages > 1 && (
         <View style={[styles.paginationFooter, { backgroundColor: colors.surfaceElevated, borderTopColor: colors.border }]}>
           <TouchableOpacity
@@ -177,12 +176,12 @@ export function HomeScreen() {
             disabled={page === 1 || isFetching}
             onPress={() => { setPage((p) => Math.max(1, p - 1)); }}
           >
-            <Text style={[styles.pageBtnText, { color: colors.primary }]}>‹ Prev</Text>
+            <Feather name="chevron-left" size={18} color={colors.primary} />
+            <Text style={[styles.pageBtnText, { color: colors.primary }]}>Prev</Text>
           </TouchableOpacity>
 
           <Text style={[styles.pageIndicator, { color: colors.textSecondary }]}>
-            Page <Text style={{ color: colors.textPrimary, fontWeight: '700' }}>{page}</Text> of {totalPages}
-            {'  '}({totalJobs} total jobs)
+            <Text style={{ color: colors.textPrimary, fontWeight: '700' }}>{page}</Text> / {totalPages}
           </Text>
 
           <TouchableOpacity
@@ -190,7 +189,8 @@ export function HomeScreen() {
             disabled={page >= totalPages || isFetching}
             onPress={() => { setPage((p) => Math.min(totalPages, p + 1)); }}
           >
-            <Text style={[styles.pageBtnText, { color: colors.primary }]}>Next ›</Text>
+            <Text style={[styles.pageBtnText, { color: colors.primary }]}>Next</Text>
+            <Feather name="chevron-right" size={18} color={colors.primary} />
           </TouchableOpacity>
         </View>
       )}
@@ -203,38 +203,35 @@ export function HomeScreen() {
           visible={!!selectedHighMatch}
           onRequestClose={() => setSelectedHighMatch(null)}
         >
-          <View style={[styles.modalOverlay, { backgroundColor: 'rgba(0,0,0,0.8)' }]}>
-            <View style={[styles.modalContent, { backgroundColor: colors.surface, borderColor: colors.primary }]}>
-              <View style={[styles.modalHeader, { backgroundColor: colors.primary + '20' }]}>
+          <View style={[styles.modalOverlay, { backgroundColor: 'rgba(0,0,0,0.88)' }]}>
+            <View style={[styles.modalContent, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <View style={[styles.modalHeader, { backgroundColor: colors.primary + '18' }]}>
+                <Feather name="zap" size={12} color={colors.primary} />
                 <Text style={[styles.modalBadgeText, { color: colors.primary }]}>
-                  🎉 Desired High Match ({Math.round(selectedHighMatch.match_score * 100)}%)
+                  {Math.round(selectedHighMatch.match_score * 100)}% Match
                 </Text>
               </View>
 
               <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
                 {cleanText(selectedHighMatch.job.title)}
               </Text>
-              <Text style={[styles.modalCompany, { color: colors.primary }]}>
-                {cleanText(selectedHighMatch.job.company.name)} • {cleanText(selectedHighMatch.job.location) || 'Remote'}
+              <Text style={[styles.modalCompany, { color: colors.textSecondary }]}>
+                {cleanText(selectedHighMatch.job.company.name)} · {cleanText(selectedHighMatch.job.location) || 'Remote'}
               </Text>
 
               {selectedHighMatch.matched_resume_category && (
                 <View style={[styles.boundResumeBox, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
+                  <Feather name="file-text" size={12} color={colors.primary} />
                   <Text style={[styles.boundResumeText, { color: colors.textSecondary }]}>
-                    📄 Matched with: <Text style={{ color: colors.primary, fontWeight: '700' }}>{selectedHighMatch.matched_resume_category} Resume</Text>
+                    Matched: <Text style={{ color: colors.primary, fontWeight: '700' }}>{selectedHighMatch.matched_resume_category}</Text>
                   </Text>
                 </View>
               )}
 
-              {((selectedHighMatch.job as JobDetailOut).description) ? (
-                <Text style={[styles.modalDesc, { color: colors.textSecondary }]} numberOfLines={5}>
-                  {cleanText((selectedHighMatch.job as JobDetailOut).description)}
-                </Text>
-              ) : (
-                <Text style={[styles.modalDesc, { color: colors.textSecondary }]} numberOfLines={4}>
-                  Full software engineering role at {cleanText(selectedHighMatch.job.company.name)}. Tap to review complete details and apply.
-                </Text>
-              )}
+              <Text style={[styles.modalDesc, { color: colors.textSecondary }]} numberOfLines={4}>
+                {cleanText((selectedHighMatch.job as JobDetailOut).description) ||
+                  `Full role at ${cleanText(selectedHighMatch.job.company.name)}. Tap to review and apply.`}
+              </Text>
 
               <View style={styles.modalActions}>
                 <TouchableOpacity
@@ -252,7 +249,10 @@ export function HomeScreen() {
                   {applyMutation.isPending ? (
                     <ActivityIndicator color="#FFFFFF" size="small" />
                   ) : (
-                    <Text style={styles.modalApplyText}>⚡ One-Click Apply</Text>
+                    <>
+                      <Feather name="zap" size={14} color="#FFFFFF" />
+                      <Text style={styles.modalApplyText}>One-Click Apply</Text>
+                    </>
                   )}
                 </TouchableOpacity>
               </View>
@@ -277,28 +277,32 @@ export function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingBottom: 110 },
+  container: { flex: 1, paddingBottom: 100 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: Spacing['2xl'],
     paddingTop: 56,
-    paddingBottom: Spacing.base,
+    paddingBottom: Spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  greeting: { fontSize: Typography.xs, textTransform: 'uppercase', letterSpacing: 1 },
-  title: { fontSize: Typography['2xl'], fontWeight: '800', letterSpacing: -0.5 },
+  greeting: { fontSize: Typography.xs, textTransform: 'uppercase', letterSpacing: 1.2, fontWeight: '600' },
+  title: { fontSize: Typography['2xl'], fontWeight: '800', letterSpacing: -0.5, marginTop: 2 },
   headerActions: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
-  themeToggleBtn: {
-    width: 38,
-    height: 38,
+  iconBtn: {
+    width: 36,
+    height: 36,
     borderRadius: Radius.full,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
   filterBtn: {
-    paddingHorizontal: Spacing.base,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: Spacing.md,
     paddingVertical: 8,
     borderRadius: Radius.full,
     borderWidth: 1,
@@ -307,48 +311,41 @@ const styles = StyleSheet.create({
   tabBar: {
     flexDirection: 'row',
     paddingHorizontal: Spacing['2xl'],
-    borderBottomWidth: 1,
-    marginBottom: Spacing.xs,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
   tabItem: {
     paddingVertical: Spacing.md,
     marginRight: Spacing.xl,
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
   },
   tabText: {
     fontSize: Typography.sm,
     fontWeight: '700',
   },
   list: { paddingHorizontal: Spacing.base, paddingBottom: Spacing['2xl'] },
-  loadingCenter: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: Spacing.base },
-  loadingText: { fontSize: Typography.base },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 80, gap: Spacing.base },
-  emptyEmoji: { fontSize: 48 },
-  emptyTitle: { fontSize: Typography.xl, fontWeight: '700' },
-  emptySubtitle: { fontSize: Typography.base, textAlign: 'center', paddingHorizontal: Spacing['2xl'] },
+  emptyTitle: { fontSize: Typography.lg, fontWeight: '700' },
+  emptySubtitle: { fontSize: Typography.sm, textAlign: 'center', paddingHorizontal: Spacing['2xl'], lineHeight: Typography.sm * 1.6 },
 
-  // Pagination styles
   paginationFooter: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.lg,
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    marginBottom: 4,
+    paddingVertical: 10,
+    borderTopWidth: StyleSheet.hairlineWidth,
   },
   pageBtn: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
   },
-  pageBtnText: {
-    fontSize: Typography.md,
-    fontWeight: '800',
-  },
-  pageIndicator: {
-    fontSize: Typography.sm,
-  },
+  pageBtnText: { fontSize: Typography.sm, fontWeight: '700' },
+  pageIndicator: { fontSize: Typography.sm },
 
-  // Modal styles
   modalOverlay: {
     flex: 1,
     justifyContent: 'center',
@@ -358,68 +355,54 @@ const styles = StyleSheet.create({
   modalContent: {
     width: '100%',
     borderRadius: Radius['2xl'],
-    borderWidth: 1.5,
+    borderWidth: 1,
     padding: Spacing.xl,
   },
   modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
     alignSelf: 'flex-start',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 6,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 5,
     borderRadius: Radius.full,
     marginBottom: Spacing.md,
   },
-  modalBadgeText: {
-    fontSize: Typography.xs,
-    fontWeight: '800',
-  },
-  modalTitle: {
-    fontSize: Typography.xl,
-    fontWeight: '800',
-    marginBottom: 4,
-  },
-  modalCompany: {
-    fontSize: Typography.sm,
-    fontWeight: '700',
-    marginBottom: Spacing.md,
-  },
+  modalBadgeText: { fontSize: Typography.xs, fontWeight: '800' },
+  modalTitle: { fontSize: Typography.xl, fontWeight: '800', marginBottom: 4 },
+  modalCompany: { fontSize: Typography.sm, fontWeight: '600', marginBottom: Spacing.md },
   boundResumeBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
     padding: Spacing.md,
     borderRadius: Radius.lg,
     borderWidth: 1,
     marginBottom: Spacing.md,
   },
-  boundResumeText: {
-    fontSize: Typography.xs,
-  },
+  boundResumeText: { fontSize: Typography.xs },
   modalDesc: {
     fontSize: Typography.sm,
-    lineHeight: Typography.sm * 1.5,
+    lineHeight: Typography.sm * 1.6,
     marginBottom: Spacing.xl,
   },
-  modalActions: {
-    flexDirection: 'row',
-    gap: Spacing.md,
-  },
+  modalActions: { flexDirection: 'row', gap: Spacing.md },
   modalCancelBtn: {
     flex: 1,
-    paddingVertical: 14,
+    paddingVertical: 13,
     borderRadius: Radius.xl,
     borderWidth: 1,
     alignItems: 'center',
   },
-  modalCancelText: {
-    fontSize: Typography.sm,
-    fontWeight: '600',
-  },
+  modalCancelText: { fontSize: Typography.sm, fontWeight: '600' },
   modalApplyBtn: {
     flex: 2,
-    paddingVertical: 14,
+    paddingVertical: 13,
     borderRadius: Radius.xl,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
   },
-  modalApplyText: {
-    fontSize: Typography.sm,
-    fontWeight: '800',
-    color: '#FFFFFF',
-  },
+  modalApplyText: { fontSize: Typography.sm, fontWeight: '800', color: '#FFFFFF' },
 });

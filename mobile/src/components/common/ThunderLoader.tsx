@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
-import { Colors, Typography, Spacing, Radius } from '../../theme/tokens';
+import { Feather } from '@expo/vector-icons';
+import { Typography, Spacing, Radius } from '../../theme/tokens';
 import { useTheme } from '../../theme/ThemeContext';
 
 interface Props {
@@ -21,12 +22,10 @@ export function ThunderLoader({ message }: Props) {
   const [progress, setProgress] = useState(0);
   const [stepIndex, setStepIndex] = useState(0);
 
-  const fillAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const glowAnim = useRef(new Animated.Value(0.4)).current;
 
   useEffect(() => {
-    // 1. Percentage counter simulation (0 -> 100%)
     let currentProgress = 0;
     const interval = setInterval(() => {
       currentProgress += Math.floor(Math.random() * 8) + 4;
@@ -43,15 +42,6 @@ export function ThunderLoader({ message }: Props) {
       setStepIndex(nextStep);
     }, 150);
 
-    // 2. Vertical fill animation for thunder
-    Animated.timing(fillAnim, {
-      toValue: 1,
-      duration: 2500,
-      easing: Easing.out(Easing.quad),
-      useNativeDriver: false,
-    }).start();
-
-    // 3. Pulsing scale & glow effect (all JS driven to prevent driver conflict crash)
     Animated.loop(
       Animated.sequence([
         Animated.parallel([
@@ -86,11 +76,6 @@ export function ThunderLoader({ message }: Props) {
     return () => clearInterval(interval);
   }, []);
 
-  const fillHeight = fillAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0%', '100%'],
-  });
-
   return (
     <View style={styles.container}>
       {/* Outer Glow Circle */}
@@ -102,19 +87,11 @@ export function ThunderLoader({ message }: Props) {
             borderColor: colors.primary,
             shadowColor: colors.primary,
             opacity: glowAnim,
+            backgroundColor: colors.primary + '12',
           },
         ]}
       >
-        {/* Thunder Mask Container */}
-        <View style={styles.thunderWrapper}>
-          {/* Base Dim Thunder Icon */}
-          <Text style={[styles.thunderBase, { color: colors.border }]}>⚡</Text>
-
-          {/* Filling Colored Layer */}
-          <Animated.View style={[styles.fillContainer, { height: fillHeight }]}>
-            <Text style={[styles.thunderActive, { color: '#6366F1' }]}>⚡</Text>
-          </Animated.View>
-        </View>
+        <Feather name="zap" size={44} color={colors.primary} />
       </Animated.View>
 
       {/* Percentage Display */}
@@ -154,44 +131,16 @@ const styles = StyleSheet.create({
     gap: Spacing.lg,
   },
   glowCircle: {
-    width: 110,
-    height: 110,
-    borderRadius: 55,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
     borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#6366F115',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
+    shadowOpacity: 0.6,
     shadowRadius: 20,
     elevation: 8,
-  },
-  thunderWrapper: {
-    width: 60,
-    height: 60,
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
-    overflow: 'hidden',
-  },
-  thunderBase: {
-    fontSize: 52,
-    position: 'absolute',
-  },
-  fillContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    overflow: 'hidden',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-  },
-  thunderActive: {
-    fontSize: 52,
-    textShadowColor: '#6366F1',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 10,
   },
   progressBox: {
     alignItems: 'center',
@@ -215,13 +164,13 @@ const styles = StyleSheet.create({
   },
   progressBarTrack: {
     width: 200,
-    height: 6,
-    borderRadius: 3,
+    height: 4,
+    borderRadius: 2,
     borderWidth: 1,
     overflow: 'hidden',
   },
   progressBarFill: {
     height: '100%',
-    borderRadius: 3,
+    borderRadius: 2,
   },
 });
