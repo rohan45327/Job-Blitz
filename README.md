@@ -1,3 +1,4 @@
+
 # JobBlitz
 
 A mobile-first AI job-search co-pilot that aggregates listings from multiple applicant tracking systems, ranks them against a candidate's actual resumes, and helps them apply faster.
@@ -27,6 +28,12 @@ JobBlitz collapses that entire workflow into one place. It addresses the problem
 - State and data fetching: `@tanstack/react-query`, Zustand
 - Custom animated loading indicator, Clearbit CDN for company logos
 
+<img width="300" height="600" alt="WhatsApp Image 2026-08-27 at 20 25 04 (1)" src="https://github.com/user-attachments/assets/bc0f5120-8f80-471e-893a-03b2b8461c2d" />
+
+<img width="300" height="600" alt="WhatsApp Image 2026-08-27 at 20 25 04 (2)" src="https://github.com/user-attachments/assets/2b9f34cf-c971-46fd-89ba-be87e35d7d0f" />
+<img width="300" height="600" alt="WhatsApp Image 2026-08-27 at 20 25 06" src="https://github.com/user-attachments/assets/282632e0-fd94-4d46-a26f-d4d1d6000eec" />
+
+
 **Backend**
 - Python 3.12, FastAPI, Uvicorn (async endpoints)
 - PostgreSQL with SQLAlchemy 2.0 and connection pooling
@@ -48,6 +55,10 @@ JobBlitz collapses that entire workflow into one place. It addresses the problem
 - Advanced multi-select filtering by company, work type (including internship, apprenticeship, research), experience level, and salary across multiple currencies
 - Persistent application tracker covering the full lifecycle: saved, applied, online assessment, interview, offer, rejected
 - Company watchlist for monitoring target employers for new postings
+
+<img width="300" height="600" alt="WhatsApp Image 2026-08-27 at 20 25 06 (1)" src="https://github.com/user-attachments/assets/7c4ebbc2-bc23-48c7-aa17-4f00636bb629" />
+<img width="300" height="600" alt="WhatsApp Image 2026-08-27 at 20 25 05" src="https://github.com/user-attachments/assets/01bb408f-baeb-4b18-a759-d0f1d5505c59" />
+
 
 ## Project Structure
 
