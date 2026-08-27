@@ -28,7 +28,6 @@ JobBlitz collapses that entire workflow into one place. It addresses the problem
 - State and data fetching: `@tanstack/react-query`, Zustand
 - Custom animated loading indicator, Clearbit CDN for company logos
 
-<img width="300" height="600" alt="WhatsApp Image 2026-08-27 at 20 25 04 (1)" src="https://github.com/user-attachments/assets/bc0f5120-8f80-471e-893a-03b2b8461c2d" />
 
 <img width="300" height="600" alt="WhatsApp Image 2026-08-27 at 20 25 04 (2)" src="https://github.com/user-attachments/assets/2b9f34cf-c971-46fd-89ba-be87e35d7d0f" />
 <img width="300" height="600" alt="WhatsApp Image 2026-08-27 at 20 25 06" src="https://github.com/user-attachments/assets/282632e0-fd94-4d46-a26f-d4d1d6000eec" />
