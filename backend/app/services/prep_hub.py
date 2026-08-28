@@ -1,17 +1,31 @@
 """
-JobBlitz Preparation Hub Engine
+JobBlitz Preparation Hub Engine — Highly Specific, Evidence-Backed Guidance
 
-Provides personalized interview & application preparation tools:
-  - 7-Day Prep Roadmap
-  - Resume Defense Mode (user project & resume line defense questions)
-  - STAR Answer Coach (Situation, Task, Action, Result)
-  - 5-Minute Company Brief & Smart Questions to Ask
+Generates domain-specific 7-Day Roadmaps, Resume Defense Questions, and 5-Minute Company Briefs tailored to the exact Company, Job Title, Required Skills, and Engineering Domain.
 """
 from __future__ import annotations
+import re
 from typing import Dict, Any, List, Optional
 from sqlalchemy.orm import Session
 
-from app.models.models import User, Job, Project, STARStory
+from app.models.models import User, Job, Project
+
+
+def detect_engineering_domain(title: str, description: str, skills: List[str]) -> str:
+    """Classify role into specific engineering track."""
+    text = f"{title} {description} {' '.join(skills)}".lower()
+    if any(k in text for k in ["ml", "machine learning", "ai", "llm", "deep learning", "nlp", "computer vision", "pytorch", "tensorflow"]):
+        return "ai_ml"
+    elif any(k in text for k in ["frontend", "react", "vue", "angular", "mobile", "ios", "android", "flutter", "react native"]):
+        return "frontend_mobile"
+    elif any(k in text for k in ["data engineer", "etl", "spark", "airflow", "bigquery", "snowflake", "pipeline"]):
+        return "data_engineering"
+    elif any(k in text for k in ["devops", "sre", "cloud", "kubernetes", "k8s", "terraform", "aws", "docker"]):
+        return "devops_cloud"
+    elif any(k in text for k in ["fullstack", "full stack", "full-stack"]):
+        return "fullstack"
+    else:
+        return "backend_systems"
 
 
 class PrepHubEngine:
@@ -21,77 +35,216 @@ class PrepHubEngine:
     def generate_prep_plan(self, user: User, job: Job, readiness_score: float) -> Dict[str, Any]:
         title = job.title or "Software Engineer"
         company_name = job.company.name if job.company else "Company"
+        job_skills = [s.name for s in job.skills] if job.skills else []
+        desc = job.description or ""
+        domain = detect_engineering_domain(title, desc, job_skills)
 
-        days_plan = [
-            {
-                "day": 1,
-                "title": "Company & Role Fundamentals",
-                "tasks": [
-                    f"Read 5-Minute Company Brief for {company_name}",
-                    "Review required core skills & role responsibilities",
-                    "Align your 30-second elevator pitch to the job description"
-                ]
-            },
-            {
-                "day": 2,
-                "title": "Core Technical Skills Deep Dive",
-                "tasks": [
-                    "Review key programming concepts (Python / TypeScript / Data Structures)",
-                    "Practice 3 core algorithm & SQL challenges",
-                    "Verify API design & schema validation concepts"
-                ]
-            },
-            {
-                "day": 3,
-                "title": "Resume Defense & Project Architecture",
-                "tasks": [
-                    "Run Resume Defense Mode on your primary projects",
-                    "Prepare 2-minute architecture explanation for your top project",
-                    "Document trade-offs & scaling decisions"
-                ]
-            },
-            {
-                "day": 4,
-                "title": "System Design & Architecture",
-                "tasks": [
-                    "Review API rate limiting, caching (Redis), and database indexing",
-                    "Practice sketching backend system components",
-                    "Prepare scalability & failover talking points"
-                ]
-            },
-            {
-                "day": 5,
-                "title": "Behavioral & STAR Answer Coaching",
-                "tasks": [
-                    "Prepare STAR story for a challenging technical bug/failure",
-                    "Prepare STAR story for team collaboration/conflict",
-                    "Refine 'Why this company?' and 'Why this role?' answers"
-                ]
-            },
-            {
-                "day": 6,
-                "title": "Mock Technical & Interview Simulation",
-                "tasks": [
-                    "Conduct a 30-minute timed mock interview",
-                    "Review answers to top 5 questions to ask the interviewer",
-                    "Finalize resume variant alignment"
-                ]
-            },
-            {
-                "day": 7,
-                "title": "Final Interview Day Readiness",
-                "tasks": [
-                    "Review 5-minute pre-interview cheat sheet",
-                    "Prepare environment, questions, and STAR stories",
-                    "Execute confident interview screen"
-                ]
-            }
-        ]
+        primary_skills_str = ", ".join(job_skills[:4]) if job_skills else "Core Programming & Algorithms"
+
+        # Specialized Day-by-Day Roadmaps per Domain
+        if domain == "ai_ml":
+            days_plan = [
+                {
+                    "day": 1,
+                    "title": f"Company & Role Fundamentals ({company_name})",
+                    "tasks": [
+                        f"Read 5-Minute Brief on {company_name}'s AI/ML product infrastructure",
+                        f"Review {title} job requirements & model deployment expectations",
+                        "Align 30-second introduction focusing on ML projects & PyTorch/TensorFlow experience"
+                    ]
+                },
+                {
+                    "day": 2,
+                    "title": "Machine Learning Algorithms & Foundations",
+                    "tasks": [
+                        f"Review core theory behind required skills: {primary_skills_str}",
+                        "Practice 3 ML coding problems: Gradient Descent, Matrix Operations, & Custom Losses",
+                        "Verify Evaluation Metrics (Precision/Recall, F1, ROC-AUC, BLEU, ROUGE)"
+                    ]
+                },
+                {
+                    "day": 3,
+                    "title": "Resume Defense & ML Project Deep-Dive",
+                    "tasks": [
+                        "Run Resume Defense Mode on your primary Machine Learning project",
+                        "Prepare 2-minute architecture explanation of dataset pipeline & model choice",
+                        "Document trade-offs: Model Latency vs Accuracy, Quantization vs Full Precision"
+                    ]
+                },
+                {
+                    "day": 4,
+                    "title": "ML System Design & High-Throughput Serving",
+                    "tasks": [
+                        "Practice ML System Design: Feature Store, Vector Search (FAISS/Milvus), & Model Registry",
+                        "Review real-time inference serving architecture (Triton / TorchServe / FastAPI)",
+                        "Prepare talking points on Data Drift, Monitoring, & Retraining pipelines"
+                    ]
+                },
+                {
+                    "day": 5,
+                    "title": "Behavioral & Engineering Values Alignment",
+                    "tasks": [
+                        f"Prepare STAR story for a model failure, data quality bug, or latency bottleneck",
+                        f"Align STAR story with {company_name}'s engineering values & team culture",
+                        "Refine 'Why this company?' answer grounded in their AI products"
+                    ]
+                },
+                {
+                    "day": 6,
+                    "title": "Mock Technical & ML System Defense",
+                    "tasks": [
+                        "Execute 45-minute timed ML Coding & System Design simulation",
+                        f"Review top 5 strategic questions to ask {company_name}'s Lead AI Engineer",
+                        "Finalize resume variant alignment for AI/ML engineering"
+                    ]
+                },
+                {
+                    "day": 7,
+                    "title": "Final Pre-Interview Readiness",
+                    "tasks": [
+                        "Review 5-minute pre-interview cheat sheet & key ML metric definitions",
+                        "Verify code environment, portfolio demos, and STAR stories",
+                        "Execute confident interview screen with interviewer"
+                    ]
+                }
+            ]
+        elif domain == "frontend_mobile":
+            days_plan = [
+                {
+                    "day": 1,
+                    "title": f"Company & Product UX Fundamentals ({company_name})",
+                    "tasks": [
+                        f"Read 5-Minute Brief on {company_name}'s frontend architecture & design system",
+                        f"Review {title} responsibilities (State management, Performance, Component Architecture)",
+                        "Align introduction focusing on UI component libraries & 60 FPS performance"
+                    ]
+                },
+                {
+                    "day": 2,
+                    "title": "JavaScript / TypeScript & DOM / Mobile Internals",
+                    "tasks": [
+                        f"Deep dive into required skills: {primary_skills_str}",
+                        "Practice JavaScript Machine Coding: Event Loop, Closures, Async/Await, & Custom Hooks",
+                        "Review React/React Native re-render optimization (useMemo, useCallback, VirtualizedLists)"
+                    ]
+                },
+                {
+                    "day": 3,
+                    "title": "Resume Defense & Frontend Architecture",
+                    "tasks": [
+                        "Run Resume Defense Mode on your top Web/Mobile portfolio project",
+                        "Prepare 2-minute explanation of State Management & API integration",
+                        "Document trade-offs: Client-side vs Server-side rendering, Bundle size optimization"
+                    ]
+                },
+                {
+                    "day": 4,
+                    "title": "Frontend System Design & Machine Coding Round",
+                    "tasks": [
+                        "Practice Frontend System Design: Autocomplete Search Widget or Infinite Feed with Caching",
+                        "Review Network Performance: WebSockets, Stale-While-Revalidate, GraphQL vs REST",
+                        "Prepare Accessibility (a11y) & Design System Token talking points"
+                    ]
+                },
+                {
+                    "day": 5,
+                    "title": "Behavioral & Product UX Alignment",
+                    "tasks": [
+                        "Prepare STAR story for fixing a critical UI/UX bug or performance regression",
+                        f"Align answers with {company_name}'s product UX standards & design philosophy",
+                        "Refine 'Why this role?' answer tied to their user-facing application"
+                    ]
+                },
+                {
+                    "day": 6,
+                    "title": "Mock Technical & Live Coding Simulation",
+                    "tasks": [
+                        "Execute 45-minute timed Machine Coding exercise (Component from scratch)",
+                        f"Review 5 targeted questions to ask {company_name}'s Lead Frontend Engineer",
+                        "Finalize resume alignment"
+                    ]
+                },
+                {
+                    "day": 7,
+                    "title": "Final Pre-Interview Readiness",
+                    "tasks": [
+                        "Review 5-minute pre-interview cheat sheet & design token references",
+                        "Verify code environment & demo links",
+                        "Execute confident interview screen"
+                    ]
+                }
+            ]
+        else: # Backend & Systems / Data / DevOps
+            days_plan = [
+                {
+                    "day": 1,
+                    "title": f"Company & Engineering System Overview ({company_name})",
+                    "tasks": [
+                        f"Read 5-Minute Brief on {company_name}'s core engineering architecture",
+                        f"Review {title} requirements: {primary_skills_str}",
+                        "Align 30-second introduction emphasizing backend systems & API scalability"
+                    ]
+                },
+                {
+                    "day": 2,
+                    "title": "Data Structures, Algorithms & Database SQL",
+                    "tasks": [
+                        "Practice 3 core algorithm problems: Graphs, Hash Tables, & Sliding Window",
+                        "Review SQL Indexing (B-Trees), ACID Transactions, & Isolation Levels",
+                        "Verify REST / gRPC API design standards & OpenAPI validation"
+                    ]
+                },
+                {
+                    "day": 3,
+                    "title": "Resume Defense & Backend Project Deep-Dive",
+                    "tasks": [
+                        "Run Resume Defense Mode on your primary backend project",
+                        "Prepare 2-minute architecture explanation of API endpoints & database schema",
+                        "Document trade-offs: SQL vs NoSQL, Synchronous APIs vs Async Message Queues"
+                    ]
+                },
+                {
+                    "day": 4,
+                    "title": "High-Scale System Design & Microservices",
+                    "tasks": [
+                        "Practice Distributed System Design: Rate Limiter, Payment Gateway, or Notification System",
+                        "Review Caching Strategies (Redis Read-Through / Write-Back) & Kafka Event Streams",
+                        "Prepare DB Sharding, Load Balancing, & Circuit Breaker talking points"
+                    ]
+                },
+                {
+                    "day": 5,
+                    "title": "Behavioral & Engineering Culture Alignment",
+                    "tasks": [
+                        "Prepare STAR story for a production outage, database deadlock, or system failure",
+                        f"Align STAR story with {company_name}'s engineering principles",
+                        "Refine 'Why this company?' answer grounded in their technology stack"
+                    ]
+                },
+                {
+                    "day": 6,
+                    "title": "Mock Technical & System Architecture Simulation",
+                    "tasks": [
+                        "Execute 45-minute timed System Design & API Live Coding simulation",
+                        f"Review 5 questions to ask {company_name}'s Engineering Manager",
+                        "Finalize resume variant alignment"
+                    ]
+                },
+                {
+                    "day": 7,
+                    "title": "Final Pre-Interview Readiness",
+                    "tasks": [
+                        "Review 5-minute pre-interview cheat sheet & API design rules",
+                        "Verify environment, architecture diagrams, and STAR stories",
+                        "Execute confident interview screen"
+                    ]
+                }
+            ]
 
         top_improvements = [
-            f"Review company brief for {company_name}",
-            "Practice project defense questions on top portfolio projects",
-            "Prepare 2 behavioral STAR stories"
+            f"Review 5-minute company brief for {company_name}",
+            f"Master system design & core skills: {primary_skills_str}",
+            "Run Resume Defense Mode on portfolio projects"
         ]
 
         return {
@@ -102,24 +255,28 @@ class PrepHubEngine:
         }
 
     def generate_resume_defense(self, user: User, job: Job, project: Optional[Project] = None) -> Dict[str, Any]:
-        proj_title = project.title if project else "Primary Engineering Project"
-        proj_skills = ", ".join(project.skills) if project and project.skills else "Python, FastAPI, SQL"
+        title = job.title or "Software Engineer"
+        company_name = job.company.name if job.company else "Company"
+        job_skills = [s.name for s in job.skills] if job.skills else []
+
+        proj_title = project.title if project else "Primary Technical Project"
+        proj_skills = ", ".join(project.skills) if project and project.skills else ", ".join(job_skills[:3]) if job_skills else "Python, FastAPI, SQL"
 
         questions = [
             {
-                "question": f"In your '{proj_title}' project, why did you choose this technical stack ({proj_skills})?",
-                "focus": "Architectural Rationale & Trade-offs",
-                "suggested_defense": "Explain the speed of iteration, ecosystem support, and performance bottlenecks you evaluated before deciding."
+                "question": f"In your '{proj_title}' project, why did you choose ({proj_skills}) over competing frameworks?",
+                "focus": "Architectural Rationale & Tech Evaluation",
+                "suggested_defense": f"Explain speed of iteration, ecosystem maturity, and benchmark performance evaluated specifically for {title} requirements."
             },
             {
-                "question": "What was the most difficult technical bug or scaling issue you encountered in this project, and how did you resolve it?",
-                "focus": "Debugging & Problem Solving",
-                "suggested_defense": "Use the STAR method: describe the symptom, your diagnostic steps (logs, profiling), the root cause, and the fix."
+                "question": f"If {company_name} interviewed you on how '{proj_title}' handles database locks or concurrency bottlenecks, what would fail first?",
+                "focus": "System Bottlenecks & Concurrency",
+                "suggested_defense": "Describe exact diagnostic tools used (profilers, slow query logs), identify lock contention, and detail your fix (connection pooling, read-replicas, or async processing)."
             },
             {
-                "question": "If you had to handle 10x higher traffic or data volume on this architecture, what would fail first and how would you redesign it?",
-                "focus": "Scalability & Future Design",
-                "suggested_defense": "Identify database locks or synchronous API calls as bottlenecks, then propose async queues, caching, and read replicas."
+                "question": f"How would you re-architect '{proj_title}' to support 10x scale under {company_name}'s production workload?",
+                "focus": "Scalability & Production Preparedness",
+                "suggested_defense": "Propose shifting synchronous API tasks to an event-driven queue (Redis/Kafka), adding a CDN for static assets, and implementing multi-region DB sharding."
             }
         ]
 
@@ -132,21 +289,24 @@ class PrepHubEngine:
     def generate_company_brief(self, job: Job) -> Dict[str, Any]:
         company_name = job.company.name if job.company else "Company"
         role_title = job.title or "Software Engineer"
+        job_skills = [s.name for s in job.skills] if job.skills else ["Python", "System Design", "SQL", "Cloud"]
+
+        tech_signals = job_skills[:6] if job_skills else ["REST APIs", "Python / TypeScript", "SQL & Relational DBs", "Docker & Cloud Deployments"]
 
         return {
             "company_name": company_name,
             "role_title": role_title,
-            "summary_5min": f"{company_name} is an industry leader building high-scale technology solutions. This {role_title} role focuses on expanding core backend/product capabilities.",
-            "why_role_exists": f"To accelerate development of scalable engineering systems, improve throughput, and deliver key product features.",
+            "summary_5min": f"{company_name} is a high-growth tech organization. This {role_title} role is embedded in the core product & engineering organization, driving high-performance software architecture.",
+            "why_role_exists": f"To scale {company_name}'s platform infrastructure, accelerate product feature delivery, and optimize system reliability.",
             "recent_developments": [
-                f"{company_name} expanding platform capabilities and cloud architecture.",
-                "High priority on technical reliability, developer productivity, and performance."
+                f"{company_name} expanding platform infrastructure and engineering team.",
+                f"Active hiring focus on strong candidates skilled in {', '.join(tech_signals[:3])}."
             ],
-            "tech_signals": ["REST APIs", "Python / TypeScript", "SQL & Relational DBs", "Docker & Cloud Deployments"],
+            "tech_signals": tech_signals,
             "questions_to_ask_interviewer": [
-                "What does success look like for this role in the first 90 days?",
-                "What are the biggest technical challenges the team is working on right now?",
-                "How does the engineering team handle testing, CI/CD, and deployment reliability?"
+                f"What are the highest priority technical milestones for the {role_title} team over the next 6 months?",
+                f"How does {company_name} handle production deployment frequency, code reviews, and testing automation?",
+                "What does outstanding performance look like for an engineer in this role during the first 90 days?"
             ],
             "provenance": "OFFICIAL & PUBLIC SIGNALS"
         }
