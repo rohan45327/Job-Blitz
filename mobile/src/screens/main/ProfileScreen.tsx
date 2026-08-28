@@ -7,7 +7,7 @@ import { Feather } from '@expo/vector-icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as DocumentPicker from 'expo-document-picker';
 import { useAuthStore } from '../../store/authStore';
-import { api, ResumeOut } from '../../api/client';
+import { api, ResumeOut, ProjectOut } from '../../api/client';
 import { Typography, Spacing, Radius } from '../../theme/tokens';
 import { useTheme } from '../../theme/ThemeContext';
 
@@ -73,6 +73,40 @@ export function ProfileScreen() {
   const { data: resumes, isLoading: isResumesLoading } = useQuery({
     queryKey: ['resumes'],
     queryFn: () => api.getResumes(),
+  });
+
+  const { data: projects } = useQuery({
+    queryKey: ['projects'],
+    queryFn: () => api.getUserProjects(),
+  });
+
+  const [showProjectModal, setShowProjectModal] = useState(false);
+  const [projTitle, setProjTitle] = useState('');
+  const [projDesc, setProjDesc] = useState('');
+  const [projSkills, setProjSkills] = useState('');
+  const [projGithub, setProjGithub] = useState('');
+
+  const createProjectMutation = useMutation({
+    mutationFn: () => api.createProject({
+      title: projTitle.trim(),
+      description: projDesc.trim(),
+      skills: projSkills.split(',').map(s => s.trim()).filter(Boolean),
+      github_url: projGithub.trim() || undefined,
+    }),
+    onSuccess: () => {
+      setShowProjectModal(false);
+      setProjTitle('');
+      setProjDesc('');
+      setProjSkills('');
+      setProjGithub('');
+      qc.invalidateQueries({ queryKey: ['projects'] });
+    },
+    onError: (e: any) => Alert.alert('Error', e.message),
+  });
+
+  const deleteProjectMutation = useMutation({
+    mutationFn: (projId: string) => api.deleteProject(projId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['projects'] }),
   });
 
   const createResumeMutation = useMutation({
@@ -253,6 +287,60 @@ export function ProfileScreen() {
           )}
         </View>
 
+        {/* Portfolio Projects Section */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeaderRow}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Feather name="code" size={13} color={colors.textMuted} />
+              <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>Portfolio Projects</Text>
+            </View>
+            <TouchableOpacity
+              style={[styles.addResumeBtn, { backgroundColor: colors.accent }]}
+              onPress={() => setShowProjectModal(true)}
+            >
+              <Feather name="plus" size={13} color="#FFFFFF" />
+              <Text style={styles.addResumeBtnText}>Add Project</Text>
+            </TouchableOpacity>
+          </View>
+
+          {!projects || projects.length === 0 ? (
+            <View style={[styles.emptyResumeBox, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
+              <Text style={[styles.emptyResumeTitle, { color: colors.textPrimary }]}>No Technical Projects Added</Text>
+              <Text style={[styles.emptyResumeSub, { color: colors.textMuted }]}>
+                Add projects to enable AI Resume Defense Mode & Technical Interview simulations.
+              </Text>
+            </View>
+          ) : (
+            <View style={{ gap: Spacing.md }}>
+              {projects.map((proj: ProjectOut) => (
+                <View key={proj.id} style={[styles.resumeCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                  <View style={styles.resumeHeader}>
+                    <Text style={[styles.resumeTitle, { color: colors.textPrimary }]}>{proj.title}</Text>
+                    <TouchableOpacity
+                      onPress={() => deleteProjectMutation.mutate(proj.id)}
+                      style={[styles.deleteBtn, { backgroundColor: colors.danger + '14', borderColor: colors.danger + '30' }]}
+                    >
+                      <Feather name="trash-2" size={13} color={colors.danger} />
+                    </TouchableOpacity>
+                  </View>
+                  {proj.description && (
+                    <Text style={[styles.emptyResumeSub, { color: colors.textSecondary, marginBottom: 6 }]}>{proj.description}</Text>
+                  )}
+                  {proj.skills && proj.skills.length > 0 && (
+                    <View style={styles.kwRow}>
+                      {proj.skills.map((s: string, i: number) => (
+                        <View key={i} style={[styles.kwChip, { backgroundColor: colors.primary + '18', borderColor: colors.primary + '30' }]}>
+                          <Text style={[styles.kwText, { color: colors.primary }]}>{s}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  )}
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
+
         {/* Personal Info */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>Personal Info</Text>
@@ -395,6 +483,80 @@ export function ProfileScreen() {
                   <ActivityIndicator color="#FFFFFF" size="small" />
                 ) : (
                   <Text style={styles.modalSaveText}>Save Resume</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Add Project Modal */}
+      <Modal
+        animationType="fade"
+        transparent
+        visible={showProjectModal}
+        onRequestClose={() => setShowProjectModal(false)}
+      >
+        <View style={[styles.modalOverlay, { backgroundColor: 'rgba(0,0,0,0.88)' }]}>
+          <View style={[styles.modalContent, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Add Technical Project</Text>
+            <Text style={[styles.modalSub, { color: colors.textMuted }]}>
+              Enter project details for AI Resume Defense & Interview Simulation.
+            </Text>
+
+            <Text style={[styles.inputLabel, { color: colors.textMuted }]}>Project Title</Text>
+            <TextInput
+              style={[styles.modalInput, { backgroundColor: colors.surfaceElevated, borderColor: colors.border, color: colors.textPrimary }]}
+              placeholder="e.g. Distributed Log Parser & Indexer"
+              placeholderTextColor={colors.textMuted}
+              value={projTitle}
+              onChangeText={setProjTitle}
+            />
+
+            <Text style={[styles.inputLabel, { color: colors.textMuted, marginTop: Spacing.md }]}>Description / Overview</Text>
+            <TextInput
+              style={[styles.modalInput, { backgroundColor: colors.surfaceElevated, borderColor: colors.border, color: colors.textPrimary }]}
+              placeholder="e.g. High-throughput log parsing engine using FastAPI & Redis."
+              placeholderTextColor={colors.textMuted}
+              value={projDesc}
+              onChangeText={setProjDesc}
+            />
+
+            <Text style={[styles.inputLabel, { color: colors.textMuted, marginTop: Spacing.md }]}>Technologies & Skills (comma separated)</Text>
+            <TextInput
+              style={[styles.modalInput, { backgroundColor: colors.surfaceElevated, borderColor: colors.border, color: colors.textPrimary }]}
+              placeholder="e.g. Python, FastAPI, Redis, Docker, SQL"
+              placeholderTextColor={colors.textMuted}
+              value={projSkills}
+              onChangeText={setProjSkills}
+            />
+
+            <Text style={[styles.inputLabel, { color: colors.textMuted, marginTop: Spacing.md }]}>GitHub / Code URL</Text>
+            <TextInput
+              style={[styles.modalInput, { backgroundColor: colors.surfaceElevated, borderColor: colors.border, color: colors.textPrimary }]}
+              placeholder="e.g. https://github.com/username/project"
+              placeholderTextColor={colors.textMuted}
+              value={projGithub}
+              onChangeText={setProjGithub}
+            />
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={[styles.modalCancelBtn, { borderColor: colors.border }]}
+                onPress={() => setShowProjectModal(false)}
+              >
+                <Text style={[styles.modalCancelText, { color: colors.textMuted }]}>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.modalSaveBtn, { backgroundColor: colors.accent }]}
+                onPress={() => createProjectMutation.mutate()}
+                disabled={createProjectMutation.isPending}
+              >
+                {createProjectMutation.isPending ? (
+                  <ActivityIndicator color="#FFFFFF" size="small" />
+                ) : (
+                  <Text style={styles.modalSaveText}>Save Project</Text>
                 )}
               </TouchableOpacity>
             </View>

@@ -10,6 +10,7 @@ type IoniconName = React.ComponentProps<typeof Ionicons>['name'];
 
 const TAB_CONFIG: Record<string, { icon: FeatherName | IoniconName; lib: 'Feather' | 'Ionicons'; label: string }> = {
   Home:         { icon: 'briefcase',  lib: 'Feather',   label: 'Feed' },
+  Prepare:      { icon: 'target',     lib: 'Feather',   label: 'Prepare' },
   Applications: { icon: 'file-text',  lib: 'Feather',   label: 'Applied' },
   Watchlist:    { icon: 'eye',        lib: 'Feather',   label: 'Watch' },
   Profile:      { icon: 'user',       lib: 'Feather',   label: 'Profile' },

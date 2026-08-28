@@ -35,6 +35,11 @@ export function JobDetailScreen({ route, navigation }: Props) {
     onError: (e: any) => Alert.alert('Error', e.message),
   });
 
+  const { data: readinessData } = useQuery({
+    queryKey: ['readiness', jobId],
+    queryFn: () => api.getJobReadiness(jobId),
+  });
+
   if (isLoading || !job) {
     return (
       <View style={[styles.loading, { backgroundColor: colors.background }]}>
@@ -81,6 +86,16 @@ export function JobDetailScreen({ route, navigation }: Props) {
         {/* Job Title */}
         <Text style={[styles.jobTitle, { color: colors.textPrimary }]}>{cleanText(job.title)}</Text>
 
+        {/* Company Intelligence CTA button */}
+        <TouchableOpacity
+          style={[styles.compIntelBtn, { backgroundColor: colors.surfaceElevated, borderColor: colors.primary + '40' }]}
+          onPress={() => navigation.navigate('CompanyIntelligence', { jobId })}
+        >
+          <Feather name="shield" size={14} color={colors.primary} />
+          <Text style={[styles.compIntelBtnText, { color: colors.primary }]}>View Company Hiring Intelligence & Funnel</Text>
+          <Feather name="chevron-right" size={14} color={colors.primary} />
+        </TouchableOpacity>
+
         {/* Meta pills */}
         <View style={styles.pills}>
           {job.location && (
@@ -106,6 +121,33 @@ export function JobDetailScreen({ route, navigation }: Props) {
             <Text style={[styles.pillText, { color: colors.textSecondary }]}>{salaryText}</Text>
           </View>
         </View>
+
+        {/* Readiness Breakdown Section */}
+        {readinessData && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeaderRow}>
+              <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>AI Readiness Score</Text>
+              <Text style={[styles.readinessScoreText, { color: colors.success }]}>
+                {Math.round(readinessData.overall_readiness * 100)}% READY
+              </Text>
+            </View>
+            <View style={[styles.readinessBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              {Object.entries(readinessData.breakdown).map(([k, v]) => (
+                <View key={k} style={styles.readinessItem}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.readinessItemLabel, { color: colors.textSecondary }]}>
+                      {k.replace(/_/g, ' ').toUpperCase()}
+                    </Text>
+                  </View>
+                  <View style={[styles.readinessBarTrack, { backgroundColor: colors.surfaceElevated }]}>
+                    <View style={[styles.readinessBarFill, { width: `${Math.round(v * 100)}%` as any, backgroundColor: colors.primary }]} />
+                  </View>
+                  <Text style={[styles.readinessItemVal, { color: colors.textPrimary }]}>{Math.round(v * 100)}%</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
 
         {/* Skills */}
         {job.skills.length > 0 && (
@@ -238,4 +280,22 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.xs, paddingHorizontal: Spacing.lg,
   },
   saveBtnText: { fontSize: Typography.sm, fontWeight: '600' },
+  compIntelBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: Spacing.md,
+    borderRadius: Radius.xl,
+    borderWidth: 1,
+    marginBottom: Spacing.lg,
+  },
+  compIntelBtnText: { fontSize: Typography.xs, fontWeight: '700', flex: 1, marginHorizontal: 8 },
+  sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: Spacing.md },
+  readinessScoreText: { fontSize: Typography.xs, fontWeight: '800' },
+  readinessBox: { padding: Spacing.base, borderRadius: Radius.xl, borderWidth: 1, gap: 10 },
+  readinessItem: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
+  readinessItemLabel: { fontSize: 10, fontWeight: '700', letterSpacing: 0.5 },
+  readinessBarTrack: { flex: 1.5, height: 6, borderRadius: Radius.full, overflow: 'hidden' },
+  readinessBarFill: { height: '100%', borderRadius: Radius.full },
+  readinessItemVal: { fontSize: Typography.xs, fontWeight: '800', width: 34, textAlign: 'right' },
 });

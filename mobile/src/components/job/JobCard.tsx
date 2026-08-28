@@ -6,6 +6,8 @@ import { Typography, Spacing, Radius, Shadow } from '../../theme/tokens';
 import { useTheme } from '../../theme/ThemeContext';
 import { cleanText } from '../../utils/cleanText';
 
+import { ReadinessBadge } from './ReadinessBadge';
+
 interface Props {
   matched: MatchedJobOut;
   onPress: () => void;
@@ -14,15 +16,12 @@ interface Props {
 
 export function JobCard({ matched, onPress, onQuickApply }: Props) {
   const { colors } = useTheme();
-  const { job, match_score, match_breakdown, matched_resume_category, is_high_match } = matched;
+  const { job, match_score, readiness_score, freshness, match_breakdown, matched_resume_category, is_high_match } = matched;
   const scorePercent = Math.round(match_score * 100);
   const [logoError, setLogoError] = useState(false);
 
   const workTypeColor =
     job.work_type === 'remote' ? colors.success : job.work_type === 'hybrid' ? colors.warning : colors.textSecondary;
-
-  const scoreColor =
-    match_score >= 0.75 ? colors.success : match_score >= 0.6 ? colors.warning : colors.textMuted;
 
   const topSkills = job.skills.slice(0, 3);
 
@@ -95,10 +94,8 @@ export function JobCard({ matched, onPress, onQuickApply }: Props) {
           </View>
         </View>
 
-        {/* Match Score Badge */}
-        <View style={[styles.scoreBadge, { backgroundColor: scoreColor + '18', borderColor: scoreColor + '60' }]}>
-          <Text style={[styles.scoreText, { color: scoreColor }]}>{scorePercent}%</Text>
-        </View>
+        {/* Dual Match & Readiness Badge */}
+        <ReadinessBadge matchScore={match_score} readinessScore={readiness_score} freshness={freshness} />
       </View>
 
       {/* Job Title */}

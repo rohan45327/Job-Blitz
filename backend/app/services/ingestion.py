@@ -43,6 +43,42 @@ class RawJob:
     raw_data: Optional[dict] = None
 
 
+def compute_job_freshness(posted_at: Optional[datetime]) -> str:
+    """Compute job freshness indicator: VERY_FRESH | FRESH | AGING | STALE"""
+    if not posted_at:
+        return "FRESH"
+    try:
+        from datetime import timezone
+        now = datetime.now(timezone.utc)
+        if posted_at.tzinfo is None:
+            posted_at = posted_at.replace(tzinfo=timezone.utc)
+        diff_hours = (now - posted_at).total_seconds() / 3600.0
+        if diff_hours <= 2:
+            return "VERY_FRESH"
+        elif diff_hours <= 24:
+            return "FRESH"
+        elif diff_hours <= 168:  # 7 days
+            return "AGING"
+        else:
+            return "STALE"
+    except Exception:
+        return "FRESH"
+
+
+def compute_hiring_signal(posted_at: Optional[datetime], source: Optional[str] = None) -> str:
+    """Compute hiring activity signal: HIGH | MEDIUM | LOW | UNKNOWN"""
+    freshness = compute_job_freshness(posted_at)
+    if source in ("greenhouse", "lever", "ashby"):
+        return "HIGH" if freshness in ("VERY_FRESH", "FRESH") else "MEDIUM"
+    if freshness in ("VERY_FRESH", "FRESH"):
+        return "HIGH"
+    elif freshness == "AGING":
+        return "MEDIUM"
+    else:
+        return "LOW"
+
+
+
 class JobSourceAdapter(ABC):
     """Base adapter interface — all ATS scrapers must implement this."""
 

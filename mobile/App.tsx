@@ -15,6 +15,8 @@ import { LoginScreen } from './src/screens/auth/LoginScreen';
 import { RegisterScreen } from './src/screens/auth/RegisterScreen';
 import { OnboardingScreen } from './src/screens/auth/OnboardingScreen';
 import { HomeScreen } from './src/screens/main/HomeScreen';
+import { PrepareScreen } from './src/screens/main/PrepareScreen';
+import { CompanyIntelligenceScreen } from './src/screens/main/CompanyIntelligenceScreen';
 import { JobDetailScreen } from './src/screens/main/JobDetailScreen';
 import { ApplicationsScreen } from './src/screens/main/ApplicationsScreen';
 import { ProfileScreen } from './src/screens/main/ProfileScreen';
@@ -28,11 +30,13 @@ export type RootStackParams = {
   Register: undefined;
   MainTabs: undefined;
   JobDetail: { jobId: string };
+  CompanyIntelligence: { jobId: string };
   WebView: { url: string };
 };
 
 export type MainTabParams = {
   Home: undefined;
+  Prepare: undefined;
   Applications: undefined;
   Watchlist: undefined;
   Profile: undefined;
@@ -57,6 +61,7 @@ function MainTabs() {
       screenOptions={{ headerShown: false }}
     >
       <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen name="Prepare" component={PrepareScreen} />
       <Tab.Screen name="Applications" component={ApplicationsScreen} />
       <Tab.Screen name="Watchlist" component={WatchlistScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
@@ -88,6 +93,11 @@ function AppNavigator() {
           <Stack.Screen
             name="JobDetail"
             component={JobDetailScreen}
+            options={{ animation: 'slide_from_right' }}
+          />
+          <Stack.Screen
+            name="CompanyIntelligence"
+            component={CompanyIntelligenceScreen}
             options={{ animation: 'slide_from_right' }}
           />
           <Stack.Screen name="WebView" component={WebViewScreen} />

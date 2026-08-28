@@ -145,17 +145,30 @@ class MatchingEngine:
         paginated = scored[start: start + page_size]
 
         from app.schemas.schemas import MatchedJobOut, JobOut, CompanyOut
+        from app.services.readiness import ReadinessEngine
+        from app.services.ingestion import compute_job_freshness, compute_hiring_signal
+
+        readiness_engine = ReadinessEngine(self.db)
 
         result = []
         for score, breakdown, res_id, res_cat, is_high, job in paginated:
             company_out = CompanyOut.from_orm_with_tier(job.company)
             job_out = JobOut.model_validate(job)
             job_out.company = company_out
+            
+            readiness_val, readiness_bdown, _ = readiness_engine.compute_readiness(user, job)
+            freshness_str = compute_job_freshness(job.posted_at)
+            hiring_sig_str = compute_hiring_signal(job.posted_at, job.source)
+
             result.append(
                 MatchedJobOut(
                     job=job_out,
                     match_score=score,
                     match_breakdown=breakdown,
+                    readiness_score=readiness_val,
+                    readiness_breakdown=readiness_bdown,
+                    freshness=freshness_str,
+                    hiring_signal=hiring_sig_str,
                     matched_resume_id=res_id,
                     matched_resume_category=res_cat,
                     is_high_match=is_high,

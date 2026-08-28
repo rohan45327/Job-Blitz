@@ -102,9 +102,90 @@ export interface MatchedJobOut {
   job: JobOut;
   match_score: number;
   match_breakdown: Record<string, number>;
+  readiness_score?: number;
+  readiness_breakdown?: Record<string, number>;
+  freshness?: string;
+  hiring_signal?: string;
   matched_resume_id: string | null;
   matched_resume_category: string | null;
   is_high_match: boolean;
+}
+
+export interface ReadinessOut {
+  job_id: string;
+  overall_readiness: number;
+  breakdown: Record<string, number>;
+  top_improvements: string[];
+}
+
+export interface CompanyIntelligenceOut {
+  company_name: string;
+  hiring_funnel: string[];
+  what_team_values: string[];
+  common_interview_topics: string[];
+  tech_stack: string[];
+  recent_news: string[];
+  salary_range: string | null;
+  public_sentiment: string;
+  provenance: string;
+}
+
+export interface CandidateBenchmarkOut {
+  role_title: string;
+  user_skill_coverage: number;
+  benchmark_skill_coverage: number;
+  user_project_count: number;
+  benchmark_project_count: number;
+  top_candidate_skills: string[];
+  data_label: string;
+}
+
+export interface PreparationPlanOut {
+  job_id: string;
+  overall_readiness: number;
+  days_plan: { day: number; title: string; tasks: string[] }[];
+  top_improvements: string[];
+}
+
+export interface ResumeDefenseResponse {
+  job_id: string;
+  project_title: string | null;
+  potential_questions: { question: string; focus: string; suggested_defense: string }[];
+}
+
+export interface CompanyBriefOut {
+  company_name: string;
+  role_title: string;
+  summary_5min: string;
+  why_role_exists: string;
+  recent_developments: string[];
+  tech_signals: string[];
+  questions_to_ask_interviewer: string[];
+  provenance: string;
+}
+
+export interface ProjectOut {
+  id: string;
+  title: string;
+  description: string | null;
+  skills: string[];
+  github_url: string | null;
+  live_url: string | null;
+  architecture_notes: string | null;
+  tradeoffs: string | null;
+  key_metrics: string | null;
+  created_at: string;
+}
+
+export interface OutcomeAnalyticsOut {
+  total_saved: number;
+  total_applied: number;
+  total_oa: number;
+  total_interviews: number;
+  total_offers: number;
+  total_rejections: number;
+  response_rate_percent: number;
+  interview_rate_percent: number;
 }
 
 export interface ResumeUploadResponse {
@@ -352,6 +433,63 @@ class ApiClient {
     return this.request<{ cover_letter: string; job_id: string }>(
       'POST', '/ai/cover-letter', { job_id, tone }
     );
+  }
+
+  // ── Readiness & Intelligence ──────────────────────────────────────────────
+
+  getJobReadiness(job_id: string) {
+    return this.request<ReadinessOut>('GET', `/readiness/jobs/${job_id}`);
+  }
+
+  getCompanyIntelligence(job_id: string) {
+    return this.request<CompanyIntelligenceOut>('GET', `/readiness/jobs/${job_id}/company-intelligence`);
+  }
+
+  getCandidateBenchmark(job_id: string) {
+    return this.request<CandidateBenchmarkOut>('GET', `/readiness/jobs/${job_id}/candidate-benchmark`);
+  }
+
+  // ── Prep Hub ──────────────────────────────────────────────────────────────
+
+  getPrepPlan(job_id: string) {
+    return this.request<PreparationPlanOut>('GET', `/prep/plan/${job_id}`);
+  }
+
+  getResumeDefense(job_id: string, project_id?: string) {
+    return this.request<ResumeDefenseResponse>('POST', '/prep/resume-defense', { job_id, project_id });
+  }
+
+  getCompanyBrief(job_id: string) {
+    return this.request<CompanyBriefOut>('GET', `/prep/company-brief/${job_id}`);
+  }
+
+  // ── Projects ──────────────────────────────────────────────────────────────
+
+  getUserProjects() {
+    return this.request<ProjectOut[]>('GET', '/projects');
+  }
+
+  createProject(payload: {
+    title: string;
+    description?: string;
+    skills?: string[];
+    github_url?: string;
+    live_url?: string;
+    architecture_notes?: string;
+    tradeoffs?: string;
+    key_metrics?: string;
+  }) {
+    return this.request<ProjectOut>('POST', '/projects', payload);
+  }
+
+  deleteProject(project_id: string) {
+    return this.request<void>('DELETE', `/projects/${project_id}`);
+  }
+
+  // ── Analytics ─────────────────────────────────────────────────────────────
+
+  getOutcomeAnalytics() {
+    return this.request<OutcomeAnalyticsOut>('GET', '/analytics/funnel');
   }
 }
 

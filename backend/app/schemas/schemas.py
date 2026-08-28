@@ -164,9 +164,129 @@ class MatchedJobOut(BaseModel):
     job: JobOut
     match_score: float
     match_breakdown: dict
+    readiness_score: float = 0.75
+    readiness_breakdown: Optional[dict] = None
+    freshness: str = "FRESH"  # VERY_FRESH | FRESH | AGING | STALE
+    hiring_signal: str = "HIGH"  # HIGH | MEDIUM | LOW | UNKNOWN
     matched_resume_id: Optional[uuid.UUID] = None
     matched_resume_category: Optional[str] = None
     is_high_match: bool = False
+
+
+class ProjectCreate(BaseModel):
+    title: str
+    description: Optional[str] = None
+    skills: List[str] = []
+    github_url: Optional[str] = None
+    live_url: Optional[str] = None
+    architecture_notes: Optional[str] = None
+    tradeoffs: Optional[str] = None
+    key_metrics: Optional[str] = None
+
+
+class ProjectOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    title: str
+    description: Optional[str]
+    skills: List[str] = []
+    github_url: Optional[str]
+    live_url: Optional[str]
+    architecture_notes: Optional[str]
+    tradeoffs: Optional[str]
+    key_metrics: Optional[str]
+    created_at: datetime
+
+
+class ReadinessOut(BaseModel):
+    job_id: uuid.UUID
+    overall_readiness: float  # 0.0 to 1.0 (0-100%)
+    breakdown: dict  # {"resume": 0.9, "skills": 0.8, "technical_interview": 0.7, ...}
+    top_improvements: List[str]
+
+
+class CompanyIntelligenceOut(BaseModel):
+    company_name: str
+    hiring_funnel: List[str]  # ["Application", "Recruiter Screen", "OA", "Technical Screen", "Behavioral", "Offer"]
+    what_team_values: List[str]
+    common_interview_topics: List[str]
+    tech_stack: List[str]
+    recent_news: List[str]
+    salary_range: Optional[str]
+    public_sentiment: str  # "Generally Positive" | "Neutral"
+    provenance: str = "OFFICIAL & PUBLIC SIGNALS"  # OFFICIAL | PUBLIC SIGNAL | INFERENCE
+
+
+class CandidateBenchmarkOut(BaseModel):
+    role_title: str
+    user_skill_coverage: float
+    benchmark_skill_coverage: float
+    user_project_count: int
+    benchmark_project_count: int
+    top_candidate_skills: List[str]
+    data_label: str = "Aggregated evidence benchmark"
+
+
+class PreparationPlanOut(BaseModel):
+    job_id: uuid.UUID
+    overall_readiness: float
+    days_plan: List[dict]  # [{"day": 1, "topic": "...", "tasks": [...]}]
+    top_improvements: List[str]
+
+
+class ResumeDefenseRequest(BaseModel):
+    job_id: uuid.UUID
+    project_id: Optional[uuid.UUID] = None
+
+
+class ResumeDefenseResponse(BaseModel):
+    job_id: uuid.UUID
+    project_title: Optional[str]
+    potential_questions: List[dict]  # [{"question": "...", "focus": "...", "suggested_defense": "..."}]
+
+
+class STARStoryCreate(BaseModel):
+    title: str
+    situation: str
+    task: str
+    action: str
+    result: str
+    skills: List[str] = []
+
+
+class STARStoryOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    title: str
+    situation: str
+    task: str
+    action: str
+    result: str
+    skills: List[str] = []
+    created_at: datetime
+
+
+class CompanyBriefOut(BaseModel):
+    company_name: str
+    role_title: str
+    summary_5min: str
+    why_role_exists: str
+    recent_developments: List[str]
+    tech_signals: List[str]
+    questions_to_ask_interviewer: List[str]
+    provenance: str = "OFFICIAL & PUBLIC SIGNALS"
+
+
+class OutcomeAnalyticsOut(BaseModel):
+    total_saved: int
+    total_applied: int
+    total_oa: int
+    total_interviews: int
+    total_offers: int
+    total_rejections: int
+    response_rate_percent: float
+    interview_rate_percent: float
+
 
 
 class ResumeCreate(BaseModel):

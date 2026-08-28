@@ -167,6 +167,7 @@ class User(Base):
     push_tokens = relationship("PushToken", back_populates="user", cascade="all, delete-orphan")
     watchlist = relationship("Watchlist", back_populates="user", cascade="all, delete-orphan")
     resumes = relationship("Resume", back_populates="user", cascade="all, delete-orphan")
+    projects = relationship("Project", back_populates="user", cascade="all, delete-orphan")
 
     created_at = Column(DateTime(timezone=True), default=utcnow)
     updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
@@ -246,4 +247,74 @@ class Resume(Base):
     updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
 
     user = relationship("User", back_populates="resumes")
+
+
+# ─── Project ───────────────────────────────────────────────────────────────────
+
+class Project(Base):
+    __tablename__ = "projects"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    title = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+    skills = Column(JSON, default=list)  # ["Python", "PyTorch", "FastAPI"]
+    github_url = Column(String(512), nullable=True)
+    live_url = Column(String(512), nullable=True)
+    architecture_notes = Column(Text, nullable=True)
+    tradeoffs = Column(Text, nullable=True)
+    key_metrics = Column(String(255), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+    updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+    user = relationship("User", back_populates="projects")
+
+
+# ─── Preparation Plan & Readiness ──────────────────────────────────────────────
+
+class PreparationPlan(Base):
+    __tablename__ = "preparation_plans"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    job_id = Column(UUID(as_uuid=True), ForeignKey("jobs.id", ondelete="CASCADE"), nullable=False)
+    readiness_score = Column(Float, default=0.0)  # 0.0 to 1.0
+    breakdown = Column(JSON, default=dict)
+    days_plan = Column(JSON, default=list)  # List of daily roadmap tasks
+    top_improvements = Column(JSON, default=list)
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+    updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+# ─── STAR Story ────────────────────────────────────────────────────────────────
+
+class STARStory(Base):
+    __tablename__ = "star_stories"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    title = Column(String(255), nullable=False)
+    situation = Column(Text, nullable=False)
+    task = Column(Text, nullable=False)
+    action = Column(Text, nullable=False)
+    result = Column(Text, nullable=False)
+    skills = Column(JSON, default=list)
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+
+
+# ─── Outcome Metric ────────────────────────────────────────────────────────────
+
+class OutcomeMetric(Base):
+    __tablename__ = "outcome_metrics"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    total_saved = Column(Integer, default=0)
+    total_applied = Column(Integer, default=0)
+    total_oa = Column(Integer, default=0)
+    total_interviews = Column(Integer, default=0)
+    total_offers = Column(Integer, default=0)
+    total_rejections = Column(Integer, default=0)
+    updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
 
