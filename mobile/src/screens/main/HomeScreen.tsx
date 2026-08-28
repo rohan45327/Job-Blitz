@@ -129,8 +129,8 @@ export function HomeScreen() {
 
       {/* List content */}
       <View style={{ flex: 1 }}>
-        {isLoading && !data ? (
-          <ThunderLoader />
+        {(isLoading || (isFetching && !data)) ? (
+          <ThunderLoader message={isFetching ? "Connecting to server & fetching real-time postings..." : undefined} />
         ) : (
           <FlatList
             data={displayItems}

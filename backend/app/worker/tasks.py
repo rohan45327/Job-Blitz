@@ -186,7 +186,7 @@ def run_matching():
 
             top_matches = []
             for job in new_jobs:
-                score, _ = engine.score_job(user, job)
+                score, _, _, _, _ = engine.score_job(user, job)
                 if score >= 0.75:
                     top_matches.append((score, job))
 

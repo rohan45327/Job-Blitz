@@ -48,7 +48,7 @@ def create_application(
         raise HTTPException(status_code=409, detail="Application already exists")
 
     engine = MatchingEngine(db)
-    score, breakdown = engine.score_job(current_user, job)
+    score, breakdown, _, _, _ = engine.score_job(current_user, job)
 
     app = Application(
         user_id=current_user.id,

@@ -45,11 +45,14 @@ export type MainTabParams = {
 const Stack = createNativeStackNavigator<RootStackParams>();
 const Tab = createBottomTabNavigator<MainTabParams>();
 
+import { StatusBar } from 'react-native';
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5,
-      retry: 2,
+      staleTime: 1000 * 60 * 15, // 15 mins cache
+      retry: 4,
+      retryDelay: (attemptIndex) => Math.min(1000 * (attemptIndex + 1), 6000), // exponential backoff to allow Render wake up
     },
   },
 });
@@ -125,6 +128,7 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
+        <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
         <NavigationContainer>
           <AppNavigator />
         </NavigationContainer>
