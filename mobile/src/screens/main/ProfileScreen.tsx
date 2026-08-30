@@ -569,7 +569,7 @@ export function ProfileScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  scroll: { paddingBottom: 120 },
+  scroll: { paddingBottom: 160 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -582,8 +582,8 @@ const styles = StyleSheet.create({
   },
   avatar: { width: 48, height: 48, borderRadius: Radius.full, alignItems: 'center', justifyContent: 'center' },
   avatarText: { fontSize: Typography.lg, fontWeight: '800', color: '#FFFFFF' },
-  name: { fontSize: Typography.md, fontWeight: '800' },
-  email: { fontSize: Typography.sm, marginTop: 1 },
+  name: { fontSize: Typography.md, fontWeight: '800', flex: 1, flexWrap: 'wrap' },
+  email: { fontSize: Typography.sm, marginTop: 1, flex: 1, flexWrap: 'wrap' },
   iconBtn: { width: 34, height: 34, borderRadius: Radius.full, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   editBtn: { width: 34, height: 34, borderRadius: Radius.full, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   section: { marginBottom: Spacing['2xl'], paddingHorizontal: Spacing['2xl'] },

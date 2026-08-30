@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
   },
   title: { fontSize: Typography['2xl'], fontWeight: '800', letterSpacing: -0.5 },
   subtitle: { fontSize: Typography.sm, marginTop: 3 },
-  list: { paddingHorizontal: Spacing.base, paddingBottom: 100 },
+  list: { paddingHorizontal: Spacing.base, paddingBottom: 160 },
   card: {
     borderRadius: Radius.xl,
     padding: Spacing.base,
@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center', borderWidth: 1,
   },
   companyLogoText: { fontSize: Typography.base, fontWeight: '800' },
-  jobTitle: { fontSize: Typography.base, fontWeight: '700' },
+  jobTitle: { fontSize: Typography.base, fontWeight: '700', flex: 1, flexWrap: 'wrap' },
   companyName: { fontSize: Typography.sm, marginTop: 1 },
   scoreBadge: {
     paddingHorizontal: Spacing.sm, paddingVertical: 4,

@@ -29,9 +29,9 @@ export function ResumeDefenseModal({ visible, jobId, onClose }: Props) {
         <View style={[styles.handle, { backgroundColor: colors.border }]} />
 
         <View style={styles.header}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1, paddingRight: Spacing.sm }}>
             <Feather name="shield" size={18} color={colors.accent} />
-            <Text style={[styles.title, { color: colors.textPrimary }]}>Resume Defense Mode</Text>
+            <Text style={[styles.title, { color: colors.textPrimary }]} numberOfLines={1}>Resume Defense Mode</Text>
           </View>
           <TouchableOpacity onPress={onClose} style={[styles.closeBtn, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
             <Feather name="x" size={16} color={colors.textSecondary} />

@@ -323,7 +323,7 @@ const styles = StyleSheet.create({
     fontSize: Typography.sm,
     fontWeight: '700',
   },
-  list: { paddingHorizontal: Spacing.base, paddingBottom: Spacing['2xl'] },
+  list: { paddingHorizontal: Spacing.base, paddingBottom: 160 },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 80, gap: Spacing.base },
   emptyTitle: { fontSize: Typography.lg, fontWeight: '700' },
   emptySubtitle: { fontSize: Typography.sm, textAlign: 'center', paddingHorizontal: Spacing['2xl'], lineHeight: Typography.sm * 1.6 },

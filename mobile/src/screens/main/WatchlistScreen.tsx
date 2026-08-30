@@ -91,7 +91,7 @@ const styles = StyleSheet.create({
   },
   title: { fontSize: Typography['2xl'], fontWeight: '800', letterSpacing: -0.5 },
   subtitle: { fontSize: Typography.sm, marginTop: 3 },
-  list: { paddingHorizontal: Spacing.base, paddingBottom: 100 },
+  list: { paddingHorizontal: Spacing.base, paddingBottom: 160 },
   card: {
     flexDirection: 'row', alignItems: 'center', gap: Spacing.md,
     borderRadius: Radius.xl,
@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
   },
   companyLogoText: { fontSize: Typography.lg, fontWeight: '800' },
   companyInfo: { flex: 1 },
-  companyName: { fontSize: Typography.base, fontWeight: '700' },
+  companyName: { fontSize: Typography.base, fontWeight: '700', flexWrap: 'wrap' },
   companyDomain: { fontSize: Typography.sm, marginTop: 1 },
   removeBtn: {
     width: 30, height: 30, borderRadius: Radius.full,
