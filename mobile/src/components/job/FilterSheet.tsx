@@ -14,10 +14,13 @@ const ALL_FILTER_COMPANIES = [
   // Big Tech & Product MNCs
   'Google', 'Microsoft', 'Amazon', 'Adobe', 'Meta', 'Salesforce', 'Oracle',
   'SAP', 'Apple', 'Uber', 'LinkedIn', 'Goldman Sachs', 'Flipkart', 'Zoho', 'Freshworks',
+  // Additional Tech Companies
+  'Spotify', 'Netflix', 'Dropbox', 'Atlassian', 'Slack', 'Twilio', 'Stripe',
   // IT Services
   'TCS', 'Infosys', 'Wipro', 'HCL Technologies', 'Tech Mahindra',
   'Accenture', 'Cognizant', 'Capgemini', 'Deloitte', 'IBM',
   'LTTS', 'Persistent Systems', 'LTIMindtree', 'Mphasis', 'EPAM Systems',
+  'VMware', 'Red Hat', 'Canonical', 'Snowflake', 'Databricks',
 ];
 
 // Top-tier companies — subtle accent tint
@@ -257,7 +260,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.full,
   },
   selectedCount: { fontSize: Typography.xs, fontWeight: '800' },
-  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm, alignItems: 'center' },
   chip: {
     paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm,
     borderRadius: Radius.full, borderWidth: 1,

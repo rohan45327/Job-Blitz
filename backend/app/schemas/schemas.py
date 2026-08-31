@@ -97,6 +97,10 @@ TIER_ONE_COMPANIES = {
     "sap", "apple", "uber", "linkedin", "goldman sachs", "flipkart", "zoho",
     "freshworks",
 
+    # ─── Additional Tech & Product MNCs ───────────────────────────────────────
+    "spotify", "netflix", "dropbox", "atlassian", "slack", "twilio",
+    "stripe", "square", "airbnb", "pinterest", "uber", "lyft",
+
     # ─── Top IT Service-Based MNCs ────────────────────────────────────────────
     "tcs", "tata consultancy services", "infosys", "wipro",
     "hcl", "hcl technologies", "hcltech", "tech mahindra",
@@ -104,6 +108,11 @@ TIER_ONE_COMPANIES = {
     "ltts", "l&t technology services", "l&t technology",
     "persistent", "persistent systems", "ltimindtree", "mindtree",
     "mphasis", "epam", "epam systems",
+
+    # ─── Cloud & Infrastructure ───────────────────────────────────────────────
+    "vmware", "red hat", "canonical", "SUSE", "Oracle", "IBM",
+    "Nutanix", "Rancher", "Mesosphere", "HashiCorp", "Databricks",
+    "Snowflake", "Confluent", "Cloudera", "Teradata",
 }
 
 

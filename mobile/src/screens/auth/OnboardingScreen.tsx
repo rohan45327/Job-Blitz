@@ -7,6 +7,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParams } from '../../../App';
 import { useTheme } from '../../theme/ThemeContext';
 import { Typography, Spacing, Radius } from '../../theme/tokens';
+import ParticleBackground from '../../components/ParticleBackground';
 
 const { width } = Dimensions.get('window');
 
@@ -51,8 +52,12 @@ export function OnboardingScreen({ navigation }: Props) {
     }
   };
 
+  const isLastSlide = activeSlide === slides.length - 1;
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <ParticleBackground />
+
       {/* Logo */}
       <View style={styles.header}>
         <View style={styles.logoRow}>

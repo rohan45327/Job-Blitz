@@ -82,7 +82,7 @@ class MatchingEngine:
         location: Optional[str] = None,
         companies: Optional[List[str]] = None,
         page: int = 1,
-        page_size: int = 20,
+        page_size: int = 50,
     ):
         """Return (list[MatchedJobOut], total_count) sorted by match score."""
         from app.schemas.schemas import MatchedJobOut
@@ -120,9 +120,15 @@ class MatchingEngine:
             company_filters = [Company.name.ilike(f"%{c}%") for c in companies]
             query = query.join(Job.company).filter(or_(*company_filters))
 
-        all_jobs = query.all()
-        total = len(all_jobs)
+        # ─── SQL-LEVEL PAGINATION ──────────────────────────────────────
+        # Replace: all_jobs = query.all(); total = len(all_jobs)
+        # With: count separately, then only fetch paged jobs
+        total = query.count()
 
+        # Fetch only the paged subset (limit + offset), ordered by posted_at for stable ordering
+        paged_jobs = query.offset((page - 1) * page_size).limit(page_size).all()
+
+        # Score only the paged jobs (not all jobs)
         from app.schemas.schemas import TIER_ONE_COMPANIES
         import re
 
@@ -134,15 +140,12 @@ class MatchingEngine:
             return False
 
         scored = []
-        for job in all_jobs:
+        for job in paged_jobs:
             score, breakdown, res_id, res_cat, is_high = self.score_job(user, job)
             scored.append((score, breakdown, res_id, res_cat, is_high, job))
 
-        # Sort by (is_top_company, match_score) descending
+        # Sort only the paged results by (is_top_company, match_score) descending
         scored.sort(key=lambda x: (is_top_company(x[5]), x[0]), reverse=True)
-
-        start = (page - 1) * page_size
-        paginated = scored[start: start + page_size]
 
         from app.schemas.schemas import MatchedJobOut, JobOut, CompanyOut
         from app.services.readiness import ReadinessEngine

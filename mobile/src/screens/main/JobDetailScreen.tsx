@@ -257,12 +257,10 @@ const styles = StyleSheet.create({
   skillText: { fontSize: Typography.sm, fontWeight: '600' },
   description: { fontSize: Typography.base, lineHeight: Typography.base * 1.7 },
   bottomBar: {
-    position: 'absolute',
-    bottom: 48,
-    left: Spacing['2xl'],
-    right: Spacing['2xl'],
-    flexDirection: 'row',
-    gap: Spacing.md,
+    // Use position: relative and let the layout flow naturally instead of absolute
+    // This avoids overlapping the home indicator on iPhones and notches on Android
+    paddingBottom: 80, // Extra padding for safe area + bottom bar height
+    marginTop: Spacing.lg,
   },
   primaryBtn: {
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
