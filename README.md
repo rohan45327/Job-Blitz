@@ -1,125 +1,158 @@
+# Job Blitz
 
-# JobBlitz
+Job Blitz is an AI-powered Job Application Productivity Agent that reduces the
+repetitive work involved in finding, understanding, preparing for, applying to,
+and tracking job opportunities.
 
-A mobile-first AI job-search co-pilot that aggregates listings from multiple applicant tracking systems, ranks them against a candidate's actual resumes, and helps them apply faster.
+Instead of treating job hunting as a collection of disconnected tasks, Job Blitz
+turns it into one intelligent workflow.
 
-**Android build:** distributed as a standalone `JobBlitz.apk` via EAS Cloud Build
+## Problem
 
----
+Job seekers repeatedly perform the same fragmented tasks:
 
-## The Problem
+Find Job
+   ↓
+Read Job Description
+   ↓
+Understand Requirements
+   ↓
+Check Personal Fit
+   ↓
+Identify Skill Gaps
+   ↓
+Tailor Resume / Cover Letter
+   ↓
+Prepare for Interview
+   ↓
+Apply
+   ↓
+Track & Follow Up
 
-As a student, it is easy to miss internships and job roles that would have been a genuine fit - not because they don't exist, but because they are scattered. Postings live across LinkedIn, Naukri, and dozens of individual company career pages, and following any one source means missing what the others have.
+This consumes significant time and makes the application process inefficient.
 
-Student life already runs on a tight budget of time: classes, building projects, networking, and having some semblance of a personal life. Into that same narrow window, the traditional job search asks for a lot more - check LinkedIn, check Naukri, check career pages, filter out roles that do not fit, pick or prepare the right resume, read through inconsistent job descriptions, manually match each one against your own experience, and only then apply. One listing at a time. This is the process that has been followed for decades, and it quietly consumes the hours students need for everything else that actually builds a career.
+## Solution
 
-## The Solution
+Job Blitz acts as an AI productivity layer over the complete job application
+workflow.
 
-JobBlitz collapses that entire workflow into one place. It addresses the problem directly, on three fronts:
+It helps a candidate:
 
-- **Multi-ATS ingestion pipeline.** Jobs are pulled continuously from (Greenhouse, Lever, Ashby, Workday, RemoteOK, Internshala, Wellfound, LinkedIn/Indeed and more scrapers) using 4 core libraries (jobspy, httpx, beautifulsoup4, celery) and stored in a unified PostgreSQL schema.
-- **Multi-dimensional matching engine.** Each job is scored against the candidate's resume using a weighted model: title relevance (25%), resume keyword overlap (40%), experience level (15%), work type (10%), and salary/location (10%). Candidates can maintain multiple categorized resumes (for example, Fullstack, Mobile, AI/ML) and get matched against the right one.
-- **Text sanitization layer.** A dedicated utility decodes HTML entities and strips markup and tags from every job card, modal, and detail view before it reaches the UI.
+- Discover relevant opportunities
+- Understand job requirements
+- Calculate explainable job-fit and readiness scores
+- Identify missing skills
+- Generate a prioritized preparation roadmap
+- Tailor resumes and cover letters
+- Prepare for role-specific interviews
+- Apply and track applications
+- Receive reminders and follow-ups
+- Analyze application outcomes
 
-## Technology Stack
+## Hackathon Innovation
 
-**Mobile**
-- React Native with Expo SDK 51, TypeScript
-- State and data fetching: `@tanstack/react-query`, Zustand
-- Custom animated loading indicator, Clearbit CDN for company logos
+The hackathon version focuses specifically on productivity.
 
+The candidate provides a job opportunity and Job Blitz converts it into an
+actionable application workspace.
 
-<img width="300" height="600" alt="WhatsApp Image 2026-08-27 at 20 25 04 (2)" src="https://github.com/user-attachments/assets/2b9f34cf-c971-46fd-89ba-be87e35d7d0f" />
-<img width="300" height="600" alt="WhatsApp Image 2026-08-27 at 20 25 06" src="https://github.com/user-attachments/assets/282632e0-fd94-4d46-a26f-d4d1d6000eec" />
+AI automatically determines:
 
+1. What the company wants
+2. How well the candidate matches
+3. What is missing
+4. What should be done first
+5. What documents should be prepared
+6. How the candidate should prepare
+7. What needs to happen next
 
-**Backend**
-- Python 3.12, FastAPI, Uvicorn (async endpoints)
-- PostgreSQL with SQLAlchemy 2.0 and connection pooling
-- Celery with Redis for background ingestion tasks
-- JWT authentication with refresh token rotation, bcrypt password hashing
+The phone becomes the AI command center while the laptop is used for deeper
+document and application work through Office Kit.
 
-**Infrastructure**
-- Backend deployed on Render
-- Android builds via EAS Cloud Build
-- Source control on GitHub
+## Core Workflow
 
-## Core Features
+DISCOVER<br>
+    ↓<br>
+ANALYZE<br>
+   ↓<br>
+MATCH<br>
+   ↓<br>
+IDENTIFY GAPS<br>
+   ↓<br>
+PREPARE<br>
+   ↓<br>
+TAILOR<br>
+   ↓<br>
+APPLY<br>
+   ↓<br>
+TRACK<br>
+   ↓<br>
+LEARN & IMPROVE<br>
 
-- Multi-ATS job ingestion pipeline pulling continuously from Greenhouse, Lever, Ashby, and Workday into a unified, standardized database
-- Weighted matching engine scoring every job against a candidate's resume across title, skill/keyword overlap, experience level, work type, and salary/location fit
-- Multiple categorized resumes per candidate (Fullstack, Mobile, AI/ML, etc.), with automated keyword extraction from uploaded PDF or DOCX files, so matching is run against the right resume for each role
-- AI-generated, role-specific cover letters tailored to the candidate's experience and the job's requirements
-- Automatic high-match alerts when a new job crosses the 75% threshold, tied to the resume category it matched against
-- Advanced multi-select filtering by company, work type (including internship, apprenticeship, research), experience level, and salary across multiple currencies
-- Persistent application tracker covering the full lifecycle: saved, applied, online assessment, interview, offer, rejected
-- Company watchlist for monitoring target employers for new postings
+## Key Features
 
-<img width="300" height="600" alt="WhatsApp Image 2026-08-27 at 20 25 06 (1)" src="https://github.com/user-attachments/assets/7c4ebbc2-bc23-48c7-aa17-4f00636bb629" />
-<img width="300" height="600" alt="WhatsApp Image 2026-08-27 at 20 25 05" src="https://github.com/user-attachments/assets/01bb408f-baeb-4b18-a759-d0f1d5505c59" />
+### AI Job Intelligence
+Extracts skills, responsibilities, experience requirements, keywords and
+expectations from job descriptions.
 
+### Match & Readiness Engine
+Produces an explainable fit score and application-readiness score.
 
-## Project Structure
+### Skill Gap Engine
+Identifies missing or weak skills and prioritizes them by importance.
 
-```
-jobblitz/
-├── backend/
-│   ├── app/
-│   │   ├── api/routes/       # Auth, jobs, resumes, applications, AI, watchlist
-│   │   ├── core/             # Config, database, security
-│   │   ├── models/           # SQLAlchemy ORM models (User, Job, Company, Resume)
-│   │   ├── schemas/          # Pydantic schemas, tier-one company registry
-│   │   ├── services/         # Matching engine, resume parser, AI service
-│   │   └── worker/           # Celery background ingestion tasks
-│   ├── Dockerfile            # Multi-stage production build
-│   ├── render.yaml           # Render deployment blueprint
-│   └── requirements.txt
-│
-├── mobile/
-│   ├── src/
-│   │   ├── api/client.ts     # Type-safe API client
-│   │   ├── components/       # Loader, job card, filter sheet, cover letter modal
-│   │   ├── screens/          # Home, job detail, applications, profile
-│   │   ├── theme/            # Design tokens and theme context
-│   │   └── utils/cleanText.ts
-│   ├── app.json
-│   └── eas.json
-│
-└── docker-compose.yml         # Local multi-container development setup
-```
+### AI Preparation Roadmap
+Creates an actionable preparation plan based on the specific role.
 
-## Getting Started
+### Resume & Cover Letter Tailoring
+Adapts application documents to the selected role while preserving factual
+candidate information.
 
-### Backend
+### Interview Copilot
+Generates role-specific interview questions and conducts mock interviews.
 
-```bash
-cd backend
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload
-```
+### Application Workspace
+Combines job information, preparation tasks, documents, interview preparation
+and application status in one workspace.
 
-Or with Docker:
+### Application Tracker
+Tracks applications, deadlines, follow-ups, interviews and outcomes.
 
-```bash
-docker compose up --build
-```
+### Phone-First AI
+Uses camera, voice and on-device AI capabilities for rapid interaction.
 
-### Mobile
+### Office Kit Workflow
+Connects the phone and laptop for document transfer, clipboard operations,
+editing and deeper work.
 
-```bash
-cd mobile
-npm install
-npx expo start
-```
+### Feedback Loop
+Application outcomes and activity are converted into insights that improve
+future recommendations.
 
-To build a standalone Android APK:
+## Technology
 
-```bash
-eas build --platform android --profile preview
-```
+Frontend:
+- React Native
+- Expo
+- TypeScript
 
-## License
+Backend:
+- FastAPI
+- PostgreSQL
+- Redis
+- Background workers
 
-Licensed By MIT.
+AI:
+- Local / open-source model where practical
+- LLM-powered orchestration
+- RAG for contextual company and role intelligence
+- Document intelligence
+
+Infrastructure:
+- Docker
+- REST APIs
+- WebSockets where required
+- Cloud deployment
+
+## Licence
+Licenced under MIT.
