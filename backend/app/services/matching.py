@@ -286,3 +286,67 @@ class MatchingEngine:
             if loc in job_location or job_location in loc:
                 return 1.0
         return 0.4
+
+    def get_fit_diagnostics(self, user: User, job: Job) -> dict:
+        """
+        Calculates multi-dimensional role fit diagnostics including
+        skill fit %, experience fit %, title relevance %, strengths, risks & verdict.
+        """
+        final_score, breakdown, resume_id, resume_cat, is_high_match = self.score_job(user, job)
+
+        overall_fit_score = int(round(final_score * 100))
+        skills_fit_pct = int(round(breakdown.get("keywords_skills", 0.5) * 100))
+        experience_fit_pct = int(round(breakdown.get("experience", 0.5) * 100))
+        title_relevance_pct = int(round(breakdown.get("role", 0.5) * 100))
+        work_type_location_pct = int(round(
+            ((breakdown.get("work_type", 0.5) + breakdown.get("salary_location", 0.5)) / 2) * 100
+        ))
+
+        strengths = []
+        risks = []
+
+        if title_relevance_pct >= 70:
+            strengths.append(f"Strong role title alignment with target {job.title}")
+        elif title_relevance_pct < 40:
+            risks.append(f"Role title '{job.title}' diverges from past experience keywords")
+
+        if skills_fit_pct >= 75:
+            if resume_cat:
+                strengths.append(f"High skill overlap using your '{resume_cat.upper()}' resume profile")
+            else:
+                strengths.append("Strong technical skill overlap with job description requirements")
+        else:
+            risks.append("Skill coverage is below target benchmark (recommend adding missing keywords)")
+
+        if experience_fit_pct >= 75:
+            strengths.append("Target experience level matches your profile tier")
+        elif experience_fit_pct < 50:
+            risks.append("Job experience requirement may be higher than profile baseline")
+
+        if work_type_location_pct >= 75:
+            strengths.append("Favorable work arrangement (Remote/Hybrid preference met)")
+        else:
+            risks.append("Work type or location arrangement requires potential relocation or commute")
+
+        if overall_fit_score >= 80:
+            verdict = f"Top-tier match ({overall_fit_score}%). High confidence for interview callback."
+        elif overall_fit_score >= 60:
+            verdict = f"Moderate match ({overall_fit_score}%). Good fit with minor skill/keyword optimization recommended."
+        else:
+            verdict = f"Selective fit ({overall_fit_score}%). Requires targeted resume customization before applying."
+
+        company_name = job.company.name if job.company else (job.company_name or "")
+
+        return {
+            "job_id": job.id,
+            "role_title": job.title or "Role",
+            "company_name": company_name,
+            "overall_fit_score": overall_fit_score,
+            "skills_fit_pct": skills_fit_pct,
+            "experience_fit_pct": experience_fit_pct,
+            "title_relevance_pct": title_relevance_pct,
+            "work_type_location_pct": work_type_location_pct,
+            "matching_strengths": strengths or ["Basic candidate eligibility met"],
+            "risk_factors": risks or ["No major risk factors detected"],
+            "executive_verdict": verdict,
+        }

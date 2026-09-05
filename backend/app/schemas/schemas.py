@@ -501,3 +501,21 @@ class SkillGapClassificationResponse(BaseModel):
     critical_gaps: List[SkillRemediation]
     secondary_gaps: List[SkillRemediation]
     summary: str
+
+
+# ────────────────────────────────────────────────────────────────────────────
+# Phase 7: Advanced Match Analytics & Role Fit Diagnostics
+# ────────────────────────────────────────────────────────────────────────────
+
+class RoleFitDiagnosticsResponse(BaseModel):
+    job_id: uuid.UUID
+    role_title: str
+    company_name: str
+    overall_fit_score: int                 # 0-100
+    skills_fit_pct: int                    # 0-100
+    experience_fit_pct: int                # 0-100
+    title_relevance_pct: int               # 0-100
+    work_type_location_pct: int            # 0-100
+    matching_strengths: List[str]
+    risk_factors: List[str]
+    executive_verdict: str

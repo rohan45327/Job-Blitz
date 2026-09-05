@@ -236,6 +236,20 @@ export interface SkillGapClassificationResponse {
   summary: string;
 }
 
+export interface RoleFitDiagnosticsResponse {
+  job_id: string;
+  role_title: string;
+  company_name: string;
+  overall_fit_score: number;
+  skills_fit_pct: number;
+  experience_fit_pct: number;
+  title_relevance_pct: number;
+  work_type_location_pct: number;
+  matching_strengths: string[];
+  risk_factors: string[];
+  executive_verdict: string;
+}
+
 export interface CompanyBriefOut {
   company_name: string;
   role_title: string;
@@ -542,6 +556,10 @@ class ApiClient {
 
   getSkillGaps(job_id: string) {
     return this.request<SkillGapClassificationResponse>('GET', `/readiness/jobs/${job_id}/skill-gaps`);
+  }
+
+  getRoleFitDiagnostics(job_id: string) {
+    return this.request<RoleFitDiagnosticsResponse>('GET', `/jobs/${job_id}/fit-diagnostics`);
   }
 
   // ── Prep Hub ──────────────────────────────────────────────────────────────

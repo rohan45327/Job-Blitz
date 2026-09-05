@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_current_user
 from app.core.database import get_db
 from app.models.models import User, Job, Application, ApplicationStatus
-from app.schemas.schemas import JobFeedResponse, JobDetailOut, MatchedJobOut, JobOut, JobIntelligenceOut
+from app.schemas.schemas import JobFeedResponse, JobDetailOut, MatchedJobOut, JobOut, JobIntelligenceOut, RoleFitDiagnosticsResponse
 from app.services.matching import MatchingEngine
 from app.services.job_intelligence import JobIntelligenceService
 
@@ -88,3 +88,19 @@ def get_job_intelligence(
     
     service = JobIntelligenceService(db)
     return service.get_job_intelligence(current_user, job)
+
+
+@router.get("/{job_id}/fit-diagnostics", response_model=RoleFitDiagnosticsResponse)
+def get_job_fit_diagnostics(
+    job_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    job = db.query(Job).filter(Job.id == job_id, Job.is_active == True).first()
+    if not job:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    engine = MatchingEngine(db)
+    diagnostics = engine.get_fit_diagnostics(current_user, job)
+    return RoleFitDiagnosticsResponse(**diagnostics)

@@ -11,6 +11,7 @@ import { api } from '../../api/client';
 import { Typography, Spacing, Radius, Shadow } from '../../theme/tokens';
 import { useTheme } from '../../theme/ThemeContext';
 import { CoverLetterModal } from '../../components/job/CoverLetterModal';
+import { RoleFitDiagnosticsModal } from '../../components/job/RoleFitDiagnosticsModal';
 import { ErrorCard } from '../../components/common/ErrorCard';
 import { cleanText } from '../../utils/cleanText';
 
@@ -21,6 +22,7 @@ export function JobDetailScreen({ route, navigation }: Props) {
   const { colors } = useTheme();
   const qc = useQueryClient();
   const [showCoverLetter, setShowCoverLetter] = useState(false);
+  const [showDiagnostics, setShowDiagnostics] = useState(false);
 
   const { data: job, isLoading, isError, refetch } = useQuery({
     queryKey: ['job', jobId],
@@ -116,6 +118,16 @@ export function JobDetailScreen({ route, navigation }: Props) {
         >
           <Feather name="shield" size={14} color={colors.primary} />
           <Text style={[styles.compIntelBtnText, { color: colors.primary }]}>View Company Hiring Intelligence & Funnel</Text>
+          <Feather name="chevron-right" size={14} color={colors.primary} />
+        </TouchableOpacity>
+
+        {/* Role Fit Diagnostics CTA button */}
+        <TouchableOpacity
+          style={[styles.compIntelBtn, { backgroundColor: colors.surfaceElevated, borderColor: colors.primary + '40', marginTop: Spacing.sm }]}
+          onPress={() => setShowDiagnostics(true)}
+        >
+          <Feather name="bar-chart-2" size={14} color={colors.primary} />
+          <Text style={[styles.compIntelBtnText, { color: colors.primary }]}>View Multi-Dimensional Role Fit Diagnostics</Text>
           <Feather name="chevron-right" size={14} color={colors.primary} />
         </TouchableOpacity>
 
@@ -301,6 +313,11 @@ export function JobDetailScreen({ route, navigation }: Props) {
         visible={showCoverLetter}
         jobId={jobId}
         onClose={() => setShowCoverLetter(false)}
+      />
+      <RoleFitDiagnosticsModal
+        visible={showDiagnostics}
+        jobId={jobId}
+        onClose={() => setShowDiagnostics(false)}
       />
     </View>
   );
