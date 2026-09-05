@@ -189,6 +189,13 @@ export interface ResumeRecommendResponse {
   available_categories: string[];
 }
 
+export interface STARStoryReviewResponse {
+  star_score: number;
+  strengths: string[];
+  improvements: string[];
+  suggested_rewrite?: string | null;
+}
+
 export interface CompanyBriefOut {
   company_name: string;
   role_title: string;
@@ -505,6 +512,10 @@ class ApiClient {
 
   getCompanyBrief(job_id: string) {
     return this.request<CompanyBriefOut>('GET', `/prep/company-brief/${job_id}`);
+  }
+
+  reviewSTARStory(payload: { job_id: string; title: string; situation: string; task: string; action: string; result: string }) {
+    return this.request<STARStoryReviewResponse>('POST', '/prep/star-story/review', payload);
   }
 
   // ── Projects ──────────────────────────────────────────────────────────────

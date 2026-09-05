@@ -353,3 +353,47 @@ class PrepHubEngine:
             ],
             "provenance": "OFFICIAL & PUBLIC SIGNALS"
         }
+
+    def review_star_story(self, job: Job, situation: str, task: str, action: str, result: str) -> Dict[str, Any]:
+        """
+        Evaluates a candidate's STAR story against engineering interview criteria.
+        """
+        strengths = []
+        improvements = []
+        score = 70.0
+
+        # Check Situation / Task
+        if len(situation.strip()) > 30 and len(task.strip()) > 20:
+            strengths.append("Clear problem framing and context setting.")
+            score += 10.0
+        else:
+            improvements.append("Expand the Situation and Task with specific context and project scale.")
+
+        # Check Action
+        if len(action.strip()) > 50:
+            strengths.append("Detailed technical action steps described.")
+            score += 10.0
+        else:
+            improvements.append("Detail your specific personal technical contributions in the Action section.")
+
+        # Check Result (metrics/numbers)
+        if re.search(r"\d+%|\d+x|\d+\s*(ms|s|sec|req|users|k|m)", result.lower()):
+            strengths.append("Strong quantitative evidence provided in the Result section.")
+            score += 10.0
+        else:
+            improvements.append("Include concrete numerical metrics in your Result (e.g. '% speedup', 'X req/sec', 'Y% error reduction').")
+
+        star_score = round(min(100.0, score), 1)
+        suggested_rewrite = (
+            f"SITUATION: {situation.strip()}\n"
+            f"TASK: {task.strip()}\n"
+            f"ACTION: Focus on your key technical choices (architectural decisions, testing, and debugging).\n"
+            f"RESULT: Quantify outcome metrics to demonstrate impact for {job.title} at {job.company.name if job.company else 'target company'}."
+        )
+
+        return {
+            "star_score": star_score,
+            "strengths": strengths if strengths else ["Good foundational structure."],
+            "improvements": improvements if improvements else ["Outstanding STAR structure!"],
+            "suggested_rewrite": suggested_rewrite,
+        }

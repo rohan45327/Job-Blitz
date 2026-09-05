@@ -306,6 +306,22 @@ class STARStoryOut(BaseModel):
     created_at: datetime
 
 
+class STARStoryReviewRequest(BaseModel):
+    job_id: uuid.UUID
+    title: str
+    situation: str
+    task: str
+    action: str
+    result: str
+
+
+class STARStoryReviewResponse(BaseModel):
+    star_score: float  # 0.0 to 100.0
+    strengths: List[str]
+    improvements: List[str]
+    suggested_rewrite: Optional[str] = None
+
+
 class CompanyBriefOut(BaseModel):
     company_name: str
     role_title: str

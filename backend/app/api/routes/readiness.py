@@ -111,6 +111,13 @@ def get_resume_defense(
     return ResumeDefenseResponse(**defense_data)
 
 
+from app.schemas.schemas import (
+    ReadinessOut, CompanyIntelligenceOut, CandidateBenchmarkOut,
+    PreparationPlanOut, ResumeDefenseRequest, ResumeDefenseResponse,
+    CompanyBriefOut, STARStoryReviewRequest, STARStoryReviewResponse
+)
+
+
 @prep_router.get("/company-brief/{job_id}", response_model=CompanyBriefOut)
 def get_company_brief(
     job_id: UUID,
@@ -125,3 +132,21 @@ def get_company_brief(
     brief_data = prep_engine.generate_company_brief(job)
 
     return CompanyBriefOut(**brief_data)
+
+
+@prep_router.post("/star-story/review", response_model=STARStoryReviewResponse)
+def review_star_story(
+    payload: STARStoryReviewRequest,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    job = db.query(Job).filter(Job.id == payload.job_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    prep_engine = PrepHubEngine(db)
+    review_data = prep_engine.review_star_story(
+        job, payload.situation, payload.task, payload.action, payload.result
+    )
+
+    return STARStoryReviewResponse(**review_data)

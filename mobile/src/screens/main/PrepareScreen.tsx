@@ -10,6 +10,7 @@ import { Typography, Spacing, Radius } from '../../theme/tokens';
 import { useTheme } from '../../theme/ThemeContext';
 import { CompanyBriefModal } from '../../components/prep/CompanyBriefModal';
 import { ResumeDefenseModal } from '../../components/prep/ResumeDefenseModal';
+import { STARStoryModal } from '../../components/prep/STARStoryModal';
 import { ErrorCard } from '../../components/common/ErrorCard';
 import { cleanText } from '../../utils/cleanText';
 
@@ -34,6 +35,7 @@ export function PrepareScreen() {
 
   const [showBriefModal, setShowBriefModal] = useState(false);
   const [showDefenseModal, setShowDefenseModal] = useState(false);
+  const [showStarModal, setShowStarModal] = useState(false);
 
   // Fetch job feed for selector options (page_size 50 for broad choice)
   const { data: feedData, isError: isFeedError, refetch: refetchFeed } = useQuery({
@@ -46,6 +48,12 @@ export function PrepareScreen() {
   const selectedMatched = allJobs.find((j) => j.job.id === activeJobId) ?? allJobs[0];
   const selectedJob = selectedMatched?.job;
   const targetJobId = selectedJob?.id;
+
+  const { data: benchmarkData } = useQuery({
+    queryKey: ['candidate-benchmark', targetJobId],
+    queryFn: () => (targetJobId ? api.getCandidateBenchmark(targetJobId) : null),
+    enabled: !!targetJobId,
+  });
 
   // Group jobs by Company for Step 1
   const companyGroups = useMemo(() => {
@@ -211,8 +219,65 @@ export function PrepareScreen() {
               <Text style={[styles.toolTitle, { color: colors.textPrimary }]}>Resume Defense</Text>
               <Text style={[styles.toolSub, { color: colors.textSecondary }]}>Practice tough project deep-dive Qs</Text>
             </TouchableOpacity>
+
+            {/* Tool 3: STAR Story Evaluator */}
+            <TouchableOpacity
+              style={[styles.toolCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
+              onPress={() => {
+                if (!targetJobId) {
+                  Alert.alert('Notice', 'No target job selected yet.');
+                  return;
+                }
+                setShowStarModal(true);
+              }}
+              activeOpacity={0.8}
+            >
+              <View style={[styles.toolIconBox, { backgroundColor: '#10B9811A' }]}>
+                <Feather name="star" size={20} color="#10B981" />
+              </View>
+              <Text style={[styles.toolTitle, { color: colors.textPrimary }]}>STAR Builder</Text>
+              <Text style={[styles.toolSub, { color: colors.textSecondary }]}>Practice & evaluate behavioral answers</Text>
+            </TouchableOpacity>
           </View>
         </View>
+
+        {/* ── Candidate Benchmarking Section ────────────────────────────── */}
+        {benchmarkData && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeaderRow}>
+              <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>Candidate Benchmark vs Top Applicants</Text>
+              <Feather name="trending-up" size={14} color={colors.primary} />
+            </View>
+
+            <View style={[styles.targetCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: Spacing.md }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.targetCompany, { color: colors.textMuted }]}>SKILL COVERAGE</Text>
+                  <Text style={[styles.targetTitle, { color: colors.textPrimary }]}>
+                    {Math.round(benchmarkData.user_skill_coverage * 100)}% <Text style={{ fontSize: Typography.xs, fontWeight: '400', color: colors.textMuted }}>vs {Math.round(benchmarkData.benchmark_skill_coverage * 100)}% benchmark</Text>
+                  </Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.targetCompany, { color: colors.textMuted }]}>PORTFOLIO PROJECTS</Text>
+                  <Text style={[styles.targetTitle, { color: colors.textPrimary }]}>
+                    {benchmarkData.user_project_count} <Text style={{ fontSize: Typography.xs, fontWeight: '400', color: colors.textMuted }}>vs {benchmarkData.benchmark_project_count} recommended</Text>
+                  </Text>
+                </View>
+              </View>
+
+              <Text style={[styles.skillGapLabel, { color: colors.textMuted, marginTop: 4, marginBottom: 6 }]}>
+                Top candidate skills for {cleanText(benchmarkData.role_title)}:
+              </Text>
+              <View style={styles.skillRow}>
+                {benchmarkData.top_candidate_skills.map((s, idx) => (
+                  <View key={idx} style={[styles.skillChip, { backgroundColor: colors.primary + '14', borderColor: colors.primary + '30', borderWidth: 1 }]}>
+                    <Text style={[styles.skillText, { color: colors.primary }]}>{s}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          </View>
+        )}
 
         {/* ── 7-Day Personalized Prep Plan ─────────────────────────────────── */}
         <View style={styles.section}>
@@ -400,6 +465,11 @@ export function PrepareScreen() {
             visible={showDefenseModal}
             jobId={targetJobId}
             onClose={() => setShowDefenseModal(false)}
+          />
+          <STARStoryModal
+            visible={showStarModal}
+            jobId={targetJobId}
+            onClose={() => setShowStarModal(false)}
           />
         </>
       )}
