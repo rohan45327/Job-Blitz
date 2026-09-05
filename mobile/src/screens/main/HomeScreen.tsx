@@ -14,6 +14,7 @@ import { useTheme } from '../../theme/ThemeContext';
 import { JobCard } from '../../components/job/JobCard';
 import { FilterSheet, Filters } from '../../components/job/FilterSheet';
 import { ThunderLoader } from '../../components/common/ThunderLoader';
+import { ErrorCard } from '../../components/common/ErrorCard';
 import { cleanText } from '../../utils/cleanText';
 import { RootStackParams } from '../../../App';
 
@@ -30,7 +31,7 @@ export function HomeScreen() {
   const [activeTab, setActiveTab] = useState<'all' | 'high_match'>('all');
   const [selectedHighMatch, setSelectedHighMatch] = useState<MatchedJobOut | null>(null);
 
-  const { data, isLoading, refetch, isFetching } = useQuery({
+  const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ['job-feed', filters, page],
     queryFn: () => api.getJobFeed({
       ...filters,
@@ -38,6 +39,7 @@ export function HomeScreen() {
       page,
       page_size: 50,
     }),
+    retry: 1,
   });
 
   const applyMutation = useMutation({
@@ -131,6 +133,13 @@ export function HomeScreen() {
       <View style={{ flex: 1 }}>
         {(isLoading || (isFetching && !data)) ? (
           <ThunderLoader message={isFetching ? "Connecting to server & fetching real-time postings..." : undefined} />
+        ) : isError ? (
+          <ErrorCard
+            title="Could not load job feed"
+            message="We could not reach the JobBlitz server. Check your connection and try again."
+            onRetry={refetch}
+            fullScreen
+          />
         ) : (
           <FlatList
             data={displayItems}

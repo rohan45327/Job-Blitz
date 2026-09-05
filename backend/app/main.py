@@ -20,6 +20,12 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
+from fastapi import Request
+from fastapi.responses import JSONResponse
+import logging
+
+logger = logging.getLogger(__name__)
+
 # ─── CORS ──────────────────────────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
@@ -28,6 +34,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.error(f"Unhandled error on {request.method} {request.url.path}: {exc}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "An internal server error occurred. Please try again later."},
+    )
+
 
 # ─── Routers ───────────────────────────────────────────────────────────────────
 app.include_router(auth.router, prefix="/api/v1")

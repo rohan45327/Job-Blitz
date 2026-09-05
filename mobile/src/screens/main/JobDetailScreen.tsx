@@ -11,6 +11,7 @@ import { api } from '../../api/client';
 import { Typography, Spacing, Radius, Shadow } from '../../theme/tokens';
 import { useTheme } from '../../theme/ThemeContext';
 import { CoverLetterModal } from '../../components/job/CoverLetterModal';
+import { ErrorCard } from '../../components/common/ErrorCard';
 import { cleanText } from '../../utils/cleanText';
 
 type Props = NativeStackScreenProps<RootStackParams, 'JobDetail'>;
@@ -21,9 +22,10 @@ export function JobDetailScreen({ route, navigation }: Props) {
   const qc = useQueryClient();
   const [showCoverLetter, setShowCoverLetter] = useState(false);
 
-  const { data: job, isLoading } = useQuery({
+  const { data: job, isLoading, isError, refetch } = useQuery({
     queryKey: ['job', jobId],
     queryFn: () => api.getJobDetail(jobId),
+    retry: 1,
   });
 
   const applyMutation = useMutation({
@@ -40,10 +42,26 @@ export function JobDetailScreen({ route, navigation }: Props) {
     queryFn: () => api.getJobReadiness(jobId),
   });
 
-  if (isLoading || !job) {
+  if (isLoading) {
     return (
       <View style={[styles.loading, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  if (isError || !job) {
+    return (
+      <View style={[styles.loading, { backgroundColor: colors.background }]}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+          <Feather name="arrow-left" size={20} color={colors.textSecondary} />
+        </TouchableOpacity>
+        <ErrorCard
+          fullScreen
+          title="Could not load job"
+          message="This job may no longer be available, or your connection dropped. Please try again."
+          onRetry={refetch}
+        />
       </View>
     );
   }

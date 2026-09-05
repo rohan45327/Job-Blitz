@@ -10,6 +10,7 @@ import { Typography, Spacing, Radius } from '../../theme/tokens';
 import { useTheme } from '../../theme/ThemeContext';
 import { CompanyBriefModal } from '../../components/prep/CompanyBriefModal';
 import { ResumeDefenseModal } from '../../components/prep/ResumeDefenseModal';
+import { ErrorCard } from '../../components/common/ErrorCard';
 import { cleanText } from '../../utils/cleanText';
 
 interface CompanyGroup {
@@ -35,9 +36,10 @@ export function PrepareScreen() {
   const [showDefenseModal, setShowDefenseModal] = useState(false);
 
   // Fetch job feed for selector options (page_size 50 for broad choice)
-  const { data: feedData } = useQuery({
+  const { data: feedData, isError: isFeedError, refetch: refetchFeed } = useQuery({
     queryKey: ['job-feed', {}, 1],
     queryFn: () => api.getJobFeed({ page: 1, page_size: 50 }),
+    retry: 1,
   });
 
   const allJobs = feedData?.items ?? [];
@@ -72,10 +74,11 @@ export function PrepareScreen() {
   }, [companyGroups, companySearchQuery]);
 
   // Fetch 7-Day Prep Plan
-  const { data: prepPlan, isLoading: isPrepLoading } = useQuery({
+  const { data: prepPlan, isLoading: isPrepLoading, isError: isPrepError, refetch: refetchPrepPlan } = useQuery({
     queryKey: ['prep-plan', targetJobId],
     queryFn: () => (targetJobId ? api.getPrepPlan(targetJobId) : null),
     enabled: !!targetJobId,
+    retry: 1,
   });
 
   const handleSelectCompany = (group: CompanyGroup) => {
@@ -220,6 +223,12 @@ export function PrepareScreen() {
 
           {isPrepLoading ? (
             <ActivityIndicator color={colors.primary} />
+          ) : isPrepError ? (
+            <ErrorCard
+              title="Could not generate plan"
+              message="Failed to generate your preparation roadmap. Please try again."
+              onRetry={refetchPrepPlan}
+            />
           ) : prepPlan?.days_plan ? (
             <View style={styles.roadmapList}>
               {prepPlan.days_plan.map((dayItem) => (

@@ -11,6 +11,7 @@ import { useTheme } from '../../theme/ThemeContext';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParams } from '../../../App';
+import { ErrorCard } from '../../components/common/ErrorCard';
 
 const STATUS_STEPS = ['saved', 'applied', 'online_assessment', 'interview', 'offer'];
 const STATUS_LABELS: Record<string, string> = {
@@ -109,15 +110,29 @@ function ApplicationCard({ app }: { app: ApplicationOut }) {
 
 export function ApplicationsScreen() {
   const { colors } = useTheme();
-  const { data, isLoading, refetch } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['applications'],
     queryFn: () => api.getApplications(),
+    retry: 1,
   });
 
   if (isLoading) {
     return (
       <View style={[styles.loading, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  if (isError) {
+    return (
+      <View style={[styles.loading, { backgroundColor: colors.background }]}>
+        <ErrorCard
+          fullScreen
+          title="Could not load applications"
+          message="We could not fetch your application tracker. Please check your connection and try again."
+          onRetry={refetch}
+        />
       </View>
     );
   }

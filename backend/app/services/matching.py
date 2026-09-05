@@ -151,7 +151,7 @@ class MatchingEngine:
         readiness_engine = ReadinessEngine(self.db)
 
         result = []
-        for score, breakdown, res_id, res_cat, is_high, job in paginated:
+        for score, breakdown, res_id, res_cat, is_high, job in scored:
             company_out = CompanyOut.from_orm_with_tier(job.company)
             job_out = JobOut.model_validate(job)
             job_out.company = company_out

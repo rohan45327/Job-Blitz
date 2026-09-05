@@ -9,6 +9,7 @@ import { RootStackParams } from '../../../App';
 import { api } from '../../api/client';
 import { Typography, Spacing, Radius } from '../../theme/tokens';
 import { useTheme } from '../../theme/ThemeContext';
+import { ErrorCard } from '../../components/common/ErrorCard';
 
 type Props = NativeStackScreenProps<RootStackParams, 'CompanyIntelligence'>;
 
@@ -16,9 +17,10 @@ export function CompanyIntelligenceScreen({ route, navigation }: Props) {
   const { jobId } = route.params;
   const { colors } = useTheme();
 
-  const { data: compData, isLoading: isCompLoading } = useQuery({
+  const { data: compData, isLoading: isCompLoading, isError: isCompError, refetch } = useQuery({
     queryKey: ['company-intelligence', jobId],
     queryFn: () => api.getCompanyIntelligence(jobId),
+    retry: 1,
   });
 
   const { data: benchData } = useQuery({
@@ -26,10 +28,26 @@ export function CompanyIntelligenceScreen({ route, navigation }: Props) {
     queryFn: () => api.getCandidateBenchmark(jobId),
   });
 
-  if (isCompLoading || !compData) {
+  if (isCompLoading) {
     return (
       <View style={[styles.loading, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  if (isCompError || !compData) {
+    return (
+      <View style={[styles.loading, { backgroundColor: colors.background }]}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+          <Feather name="arrow-left" size={20} color={colors.textSecondary} />
+        </TouchableOpacity>
+        <ErrorCard
+          fullScreen
+          title="Could not load company intelligence"
+          message="We could not retrieve hiring intelligence for this company. Please try again."
+          onRetry={refetch}
+        />
       </View>
     );
   }
