@@ -168,6 +168,16 @@ class JobDetailOut(JobOut):
     raw_data: Optional[dict] = None
 
 
+class OpportunityScoreOut(BaseModel):
+    overall_score: float  # 0.0 to 100.0
+    skill_match_pct: float  # 0.0 to 100.0
+    experience_fit_pct: float  # 0.0 to 100.0
+    role_relevance_pct: float  # 0.0 to 100.0
+    matched_skills: List[str] = []
+    missing_skills: List[str] = []
+    competition_level: str = "Medium"  # Low | Medium | High
+
+
 class MatchedJobOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     job: JobOut
@@ -180,6 +190,16 @@ class MatchedJobOut(BaseModel):
     matched_resume_id: Optional[uuid.UUID] = None
     matched_resume_category: Optional[str] = None
     is_high_match: bool = False
+    opportunity_score: Optional[OpportunityScoreOut] = None
+
+
+class JobIntelligenceOut(BaseModel):
+    job_id: uuid.UUID
+    opportunity_score: OpportunityScoreOut
+    company_intelligence: Optional[CompanyIntelligenceOut] = None
+    readiness_summary: Optional[ReadinessOut] = None
+    key_responsibilities: List[str] = []
+    recommended_actions: List[str] = []
 
 
 class ProjectCreate(BaseModel):

@@ -147,11 +147,13 @@ class MatchingEngine:
         from app.schemas.schemas import MatchedJobOut, JobOut, CompanyOut
         from app.services.readiness import ReadinessEngine
         from app.services.ingestion import compute_job_freshness, compute_hiring_signal
+        from app.services.job_intelligence import JobIntelligenceService
 
         readiness_engine = ReadinessEngine(self.db)
+        intel_service = JobIntelligenceService(self.db)
 
         result = []
-        for score, breakdown, res_id, res_cat, is_high, job in scored:
+        for score, breakdown, res_id, res_cat, is_high, job in paginated:
             company_out = CompanyOut.from_orm_with_tier(job.company)
             job_out = JobOut.model_validate(job)
             job_out.company = company_out
@@ -159,6 +161,7 @@ class MatchingEngine:
             readiness_val, readiness_bdown, _ = readiness_engine.compute_readiness(user, job)
             freshness_str = compute_job_freshness(job.posted_at)
             hiring_sig_str = compute_hiring_signal(job.posted_at, job.source)
+            opp_score = intel_service.calculate_opportunity_score(user, job)
 
             result.append(
                 MatchedJobOut(
@@ -172,6 +175,7 @@ class MatchingEngine:
                     matched_resume_id=res_id,
                     matched_resume_category=res_cat,
                     is_high_match=is_high,
+                    opportunity_score=opp_score,
                 )
             )
         return result, total

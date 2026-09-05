@@ -105,6 +105,13 @@ export function JobCard({ matched, onPress, onQuickApply }: Props) {
 
       {/* Tags */}
       <View style={styles.tags}>
+        {matched.opportunity_score && (
+          <View style={[styles.tag, { backgroundColor: colors.primary + '18', borderColor: colors.primary + '40' }]}>
+            <Text style={[styles.tagText, { color: colors.primary, fontWeight: '700' }]}>
+              🎯 {matched.opportunity_score.overall_score} Opp. Score
+            </Text>
+          </View>
+        )}
         {job.work_type && (
           <View style={[styles.tag, { backgroundColor: colors.surfaceElevated, borderColor: workTypeColor + '50' }]}>
             <Text style={[styles.tagText, { color: workTypeColor }]}>{job.work_type}</Text>

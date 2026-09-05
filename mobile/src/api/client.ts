@@ -98,6 +98,25 @@ export interface ResumeOut {
   created_at: string;
 }
 
+export interface OpportunityScoreOut {
+  overall_score: number;
+  skill_match_pct: number;
+  experience_fit_pct: number;
+  role_relevance_pct: number;
+  matched_skills: string[];
+  missing_skills: string[];
+  competition_level: string;
+}
+
+export interface JobIntelligenceOut {
+  job_id: string;
+  opportunity_score: OpportunityScoreOut;
+  company_intelligence?: CompanyIntelligenceOut | null;
+  readiness_summary?: ReadinessOut | null;
+  key_responsibilities: string[];
+  recommended_actions: string[];
+}
+
 export interface MatchedJobOut {
   job: JobOut;
   match_score: number;
@@ -109,6 +128,7 @@ export interface MatchedJobOut {
   matched_resume_id: string | null;
   matched_resume_category: string | null;
   is_high_match: boolean;
+  opportunity_score?: OpportunityScoreOut | null;
 }
 
 export interface ReadinessOut {
@@ -333,6 +353,10 @@ class ApiClient {
 
   getJobDetail(jobId: string) {
     return this.request<JobDetailOut>('GET', `/jobs/${jobId}`);
+  }
+
+  getJobIntelligence(jobId: string) {
+    return this.request<JobIntelligenceOut>('GET', `/jobs/${jobId}/intelligence`);
   }
 
   // ── Applications ────────────────────────────────────────────────────────────

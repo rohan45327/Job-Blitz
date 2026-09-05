@@ -42,6 +42,11 @@ export function JobDetailScreen({ route, navigation }: Props) {
     queryFn: () => api.getJobReadiness(jobId),
   });
 
+  const { data: intelData } = useQuery({
+    queryKey: ['jobIntelligence', jobId],
+    queryFn: () => api.getJobIntelligence(jobId),
+  });
+
   if (isLoading) {
     return (
       <View style={[styles.loading, { backgroundColor: colors.background }]}>
@@ -139,6 +144,75 @@ export function JobDetailScreen({ route, navigation }: Props) {
             <Text style={[styles.pillText, { color: colors.textSecondary }]}>{salaryText}</Text>
           </View>
         </View>
+
+        {/* Opportunity Score Card */}
+        {intelData?.opportunity_score && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeaderRow}>
+              <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>Opportunity Score</Text>
+              <View style={[styles.compBadge, { backgroundColor: colors.primary + '1A' }]}>
+                <Text style={[styles.compBadgeText, { color: colors.primary }]}>
+                  {intelData.opportunity_score.competition_level} Competition
+                </Text>
+              </View>
+            </View>
+
+            <View style={[styles.oppScoreCard, { backgroundColor: colors.surface, borderColor: colors.primary + '35' }]}>
+              <View style={styles.oppMainRow}>
+                <View>
+                  <Text style={[styles.oppScoreBig, { color: colors.primary }]}>
+                    {intelData.opportunity_score.overall_score}
+                  </Text>
+                  <Text style={[styles.oppScoreSub, { color: colors.textMuted }]}>out of 100</Text>
+                </View>
+                <View style={styles.oppMetricsCol}>
+                  <View style={styles.oppMetricRow}>
+                    <Text style={[styles.oppMetricLabel, { color: colors.textSecondary }]}>Skill Match</Text>
+                    <Text style={[styles.oppMetricVal, { color: colors.textPrimary }]}>{intelData.opportunity_score.skill_match_pct}%</Text>
+                  </View>
+                  <View style={styles.oppMetricRow}>
+                    <Text style={[styles.oppMetricLabel, { color: colors.textSecondary }]}>Experience Fit</Text>
+                    <Text style={[styles.oppMetricVal, { color: colors.textPrimary }]}>{intelData.opportunity_score.experience_fit_pct}%</Text>
+                  </View>
+                  <View style={styles.oppMetricRow}>
+                    <Text style={[styles.oppMetricLabel, { color: colors.textSecondary }]}>Role Relevance</Text>
+                    <Text style={[styles.oppMetricVal, { color: colors.textPrimary }]}>{intelData.opportunity_score.role_relevance_pct}%</Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* Matched vs Missing Skills */}
+              {(intelData.opportunity_score.matched_skills.length > 0 || intelData.opportunity_score.missing_skills.length > 0) && (
+                <View style={styles.skillGapSection}>
+                  {intelData.opportunity_score.matched_skills.length > 0 && (
+                    <View style={{ marginBottom: 6 }}>
+                      <Text style={[styles.skillGapLabel, { color: colors.success }]}>Matched Skills:</Text>
+                      <View style={styles.skills}>
+                        {intelData.opportunity_score.matched_skills.map((s, idx) => (
+                          <View key={idx} style={[styles.skillChip, { backgroundColor: '#10B9811A', borderColor: '#10B98140', borderWidth: 1 }]}>
+                            <Text style={[styles.skillText, { color: colors.success }]}>✓ {s}</Text>
+                          </View>
+                        ))}
+                      </View>
+                    </View>
+                  )}
+                  {intelData.opportunity_score.missing_skills.length > 0 && (
+                    <View>
+                      <Text style={[styles.skillGapLabel, { color: '#F59E0B' }]}>Skills Gap:</Text>
+                      <View style={styles.skills}>
+                        {intelData.opportunity_score.missing_skills.map((s, idx) => (
+                          <View key={idx} style={[styles.skillChip, { backgroundColor: '#F59E0B1A', borderColor: '#F59E0B40', borderWidth: 1 }]}>
+                            <Text style={[styles.skillText, { color: '#F59E0B' }]}>+ {s}</Text>
+                          </View>
+                        ))}
+                      </View>
+                    </View>
+                  )}
+                </View>
+              )}
+            </View>
+          </View>
+        )}
 
         {/* Readiness Breakdown Section */}
         {readinessData && (
@@ -305,7 +379,70 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginBottom: Spacing.lg,
   },
-  compIntelBtnText: { fontSize: Typography.xs, fontWeight: '700', flex: 1, marginHorizontal: 8 },
+  compIntelBtnText: {
+    fontSize: Typography.sm,
+    fontWeight: '600',
+    flex: 1,
+    marginLeft: 8,
+  },
+  compBadge: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 3,
+    borderRadius: Radius.full,
+  },
+  compBadgeText: {
+    fontSize: Typography.xs,
+    fontWeight: '700',
+  },
+  oppScoreCard: {
+    padding: Spacing.lg,
+    borderRadius: Radius.xl,
+    borderWidth: 1,
+  },
+  oppMainRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.lg,
+  },
+  oppScoreBig: {
+    fontSize: 36,
+    fontWeight: '900',
+    lineHeight: 40,
+  },
+  oppScoreSub: {
+    fontSize: Typography.xs,
+    fontWeight: '600',
+    marginTop: 2,
+  },
+  oppMetricsCol: {
+    flex: 1,
+    gap: 4,
+  },
+  oppMetricRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  oppMetricLabel: {
+    fontSize: Typography.xs,
+    fontWeight: '600',
+  },
+  oppMetricVal: {
+    fontSize: Typography.xs,
+    fontWeight: '700',
+  },
+  skillGapSection: {
+    marginTop: Spacing.md,
+    paddingTop: Spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: '#FFFFFF12',
+  },
+  skillGapLabel: {
+    fontSize: Typography.xs,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
   sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: Spacing.md },
   readinessScoreText: { fontSize: Typography.xs, fontWeight: '800' },
   readinessBox: { padding: Spacing.base, borderRadius: Radius.xl, borderWidth: 1, gap: 10 },
