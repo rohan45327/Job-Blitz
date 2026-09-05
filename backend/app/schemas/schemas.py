@@ -269,6 +269,11 @@ class ResumeVulnerability(BaseModel):
     mitigation: str
 
 
+class ResumeDefenseRequest(BaseModel):
+    job_id: uuid.UUID
+    project_id: Optional[uuid.UUID] = None
+
+
 class ResumeDefenseResponse(BaseModel):
     job_id: uuid.UUID
     project_title: Optional[str] = None
