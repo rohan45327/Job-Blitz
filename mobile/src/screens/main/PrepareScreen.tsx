@@ -11,6 +11,7 @@ import { useTheme } from '../../theme/ThemeContext';
 import { CompanyBriefModal } from '../../components/prep/CompanyBriefModal';
 import { ResumeDefenseModal } from '../../components/prep/ResumeDefenseModal';
 import { STARStoryModal } from '../../components/prep/STARStoryModal';
+import { EvidenceMapModal } from '../../components/prep/EvidenceMapModal';
 import { ErrorCard } from '../../components/common/ErrorCard';
 import { cleanText } from '../../utils/cleanText';
 
@@ -36,6 +37,7 @@ export function PrepareScreen() {
   const [showBriefModal, setShowBriefModal] = useState(false);
   const [showDefenseModal, setShowDefenseModal] = useState(false);
   const [showStarModal, setShowStarModal] = useState(false);
+  const [showEvidenceModal, setShowEvidenceModal] = useState(false);
 
   // Fetch job feed for selector options (page_size 50 for broad choice)
   const { data: feedData, isError: isFeedError, refetch: refetchFeed } = useQuery({
@@ -123,6 +125,14 @@ export function PrepareScreen() {
       return;
     }
     setShowDefenseModal(true);
+  };
+
+  const handleOpenEvidence = () => {
+    if (!targetJobId) {
+      Alert.alert('Notice', 'No target job selected yet.');
+      return;
+    }
+    setShowEvidenceModal(true);
   };
 
   return (
@@ -237,6 +247,19 @@ export function PrepareScreen() {
               </View>
               <Text style={[styles.toolTitle, { color: colors.textPrimary }]}>STAR Builder</Text>
               <Text style={[styles.toolSub, { color: colors.textSecondary }]}>Practice & evaluate behavioral answers</Text>
+            </TouchableOpacity>
+
+            {/* Tool 4: Project Evidence Map */}
+            <TouchableOpacity
+              style={[styles.toolCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
+              onPress={handleOpenEvidence}
+              activeOpacity={0.8}
+            >
+              <View style={[styles.toolIconBox, { backgroundColor: '#8B5CF61A' }]}>
+                <Feather name="layers" size={20} color="#8B5CF6" />
+              </View>
+              <Text style={[styles.toolTitle, { color: colors.textPrimary }]}>Evidence Map</Text>
+              <Text style={[styles.toolSub, { color: colors.textSecondary }]}>Project-to-requirement alignment</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -471,6 +494,11 @@ export function PrepareScreen() {
             jobId={targetJobId}
             onClose={() => setShowStarModal(false)}
           />
+          <EvidenceMapModal
+            visible={showEvidenceModal}
+            jobId={targetJobId}
+            onClose={() => setShowEvidenceModal(false)}
+          />
         </>
       )}
     </View>
@@ -521,8 +549,8 @@ const styles = StyleSheet.create({
   selectPromptBtn: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, padding: Spacing.lg, borderRadius: Radius.xl, borderWidth: 1 },
   selectPromptText: { fontSize: Typography.base, fontWeight: '700' },
 
-  toolsGrid: { flexDirection: 'row', gap: Spacing.md },
-  toolCard: { flex: 1, padding: Spacing.base, borderRadius: Radius.xl, borderWidth: 1 },
+  toolsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.md },
+  toolCard: { width: '47%', padding: Spacing.base, borderRadius: Radius.xl, borderWidth: 1 },
   toolIconBox: { width: 38, height: 38, borderRadius: Radius.lg, alignItems: 'center', justifyContent: 'center', marginBottom: Spacing.sm },
   toolTitle: { fontSize: Typography.base, fontWeight: '700', marginBottom: 2 },
   toolSub: { fontSize: Typography.xs, lineHeight: Typography.xs * 1.5 },

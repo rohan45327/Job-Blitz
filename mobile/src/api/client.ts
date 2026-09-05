@@ -196,6 +196,29 @@ export interface STARStoryReviewResponse {
   suggested_rewrite?: string | null;
 }
 
+export interface ProjectEvidenceRecord {
+  project_id: string;
+  project_title: string;
+  strength: 'strong' | 'moderate' | 'weak';
+  matched_requirements: string[];
+  matched_skills: string[];
+  talking_points: string[];
+}
+
+export interface UnmappedRequirement {
+  requirement: string;
+  suggestion: string;
+}
+
+export interface EvidenceMapResponse {
+  job_id: string;
+  role_title: string;
+  coverage_percentage: number;
+  mapped_projects: ProjectEvidenceRecord[];
+  unmapped_requirements: UnmappedRequirement[];
+  key_takeaway: string;
+}
+
 export interface CompanyBriefOut {
   company_name: string;
   role_title: string;
@@ -516,6 +539,10 @@ class ApiClient {
 
   reviewSTARStory(payload: { job_id: string; title: string; situation: string; task: string; action: string; result: string }) {
     return this.request<STARStoryReviewResponse>('POST', '/prep/star-story/review', payload);
+  }
+
+  getEvidenceMap(job_id: string) {
+    return this.request<EvidenceMapResponse>('GET', `/prep/evidence-map/${job_id}`);
   }
 
   // ── Projects ──────────────────────────────────────────────────────────────

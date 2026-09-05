@@ -397,3 +397,145 @@ class PrepHubEngine:
             "improvements": improvements if improvements else ["Outstanding STAR structure!"],
             "suggested_rewrite": suggested_rewrite,
         }
+
+    # ──────────────────────────────────────────────────────────────────────────
+    # Evidence Map — Phase 5
+    # ──────────────────────────────────────────────────────────────────────────
+
+    def generate_evidence_map(self, user: User, job: Job) -> Dict[str, Any]:
+        """
+        Map user's projects to job requirements.
+        Returns coverage %, per-project evidence records, and gap suggestions.
+        """
+        projects: List[Project] = getattr(user, "projects", []) or []
+        job_skills = [s.name.lower() for s in job.skills] if job.skills else []
+        desc = (job.description or "").lower()
+        job_title = job.title or "Software Engineer"
+        company = job.company.name if job.company else "the company"
+
+        # Extract implied requirements from JD keywords + explicit skills
+        requirements: List[str] = []
+        req_kw_map: Dict[str, List[str]] = {}
+
+        DOMAIN_REQUIREMENTS = [
+            ("System Design", ["scalab", "distributed", "microservice", "architect", "design system"]),
+            ("API Development", ["rest", "api", "endpoint", "graphql", "grpc", "fastapi", "django", "flask"]),
+            ("Database Design", ["sql", "nosql", "postgresql", "mongodb", "schema", "query optimiz"]),
+            ("Cloud & DevOps", ["aws", "gcp", "azure", "docker", "kubernetes", "k8s", "terraform", "ci/cd"]),
+            ("Machine Learning", ["ml", "machine learning", "model", "pytorch", "tensorflow", "sklearn", "llm", "nlp"]),
+            ("Frontend/UI", ["react", "vue", "angular", "typescript", "frontend", "ui", "css", "html"]),
+            ("Data Engineering", ["spark", "airflow", "etl", "pipeline", "bigquery", "kafka", "dbt"]),
+            ("Testing & Quality", ["test", "jest", "pytest", "unit test", "coverage", "ci", "tdd"]),
+            ("Performance", ["optim", "latency", "throughput", "benchmark", "profil", "scalab"]),
+            ("Security", ["auth", "jwt", "oauth", "security", "encrypt", "rbac"]),
+        ]
+
+        for req_name, kws in DOMAIN_REQUIREMENTS:
+            if any(k in desc for k in kws) or any(k in " ".join(job_skills) for k in kws):
+                requirements.append(req_name)
+                req_kw_map[req_name] = kws
+
+        # Add explicit skills that aren't already covered
+        for sk in job_skills[:6]:
+            canonical = sk.title()
+            if not any(sk in " ".join(req_kw_map.get(r, [])) for r in requirements):
+                if canonical not in requirements:
+                    requirements.append(canonical)
+                    req_kw_map[canonical] = [sk]
+
+        if not requirements:
+            requirements = ["Core Engineering", "Problem Solving"]
+            req_kw_map = {"Core Engineering": ["engineer"], "Problem Solving": ["algorithm"]}
+
+        # Map projects to requirements
+        mapped_projects = []
+        covered_reqs: set = set()
+
+        for proj in projects:
+            proj_text = " ".join([
+                proj.title or "",
+                proj.description or "",
+                " ".join(proj.skills or []),
+                proj.architecture_notes or "",
+                proj.tradeoffs or "",
+                proj.key_metrics or "",
+            ]).lower()
+
+            proj_matched_reqs = []
+            proj_matched_skills = []
+
+            for req in requirements:
+                kws = req_kw_map.get(req, [req.lower()])
+                if any(k in proj_text for k in kws):
+                    proj_matched_reqs.append(req)
+                    covered_reqs.add(req)
+
+            for sk in job_skills:
+                if sk in proj_text:
+                    proj_matched_skills.append(sk.title())
+
+            if not proj_matched_reqs:
+                continue  # project doesn't map to any job requirement
+
+            # Determine strength
+            n = len(proj_matched_reqs)
+            strength = "strong" if n >= 3 else "moderate" if n >= 2 else "weak"
+
+            # Generate talking point
+            metrics_hint = f" — with measurable outcome: {proj.key_metrics}" if proj.key_metrics else ""
+            skills_hint = ", ".join(proj_matched_skills[:3]) if proj_matched_skills else (proj.title or "this project")
+            talking_point = (
+                f"In my project '{proj.title}', I used {skills_hint} to address "
+                f"{', '.join(proj_matched_reqs[:2])}{metrics_hint}. "
+                "This directly maps to what you need for this role."
+            )
+
+            mapped_projects.append({
+                "project_id": str(proj.id),
+                "project_title": proj.title,
+                "matched_requirements": proj_matched_reqs,
+                "matched_skills": proj_matched_skills,
+                "strength": strength,
+                "talking_point": talking_point,
+            })
+
+        # Find unmapped requirements
+        unmapped = []
+        SUGGESTIONS = {
+            "System Design": "Build a mini-distributed system (e.g. URL shortener or rate limiter) and document your architecture decisions.",
+            "Machine Learning": "Complete a Kaggle project or fine-tune a small open-source LLM and add it to your GitHub.",
+            "Cloud & DevOps": "Deploy a side project on AWS/GCP with a CI/CD pipeline using GitHub Actions.",
+            "Testing & Quality": "Add comprehensive unit and integration tests to an existing project and document coverage.",
+            "Performance": "Profile and optimize one of your projects; document latency improvements with benchmarks.",
+            "Frontend/UI": "Build a polished UI feature in React/TypeScript and link a live demo.",
+            "Data Engineering": "Create an end-to-end data pipeline with Airflow or dbt processing a public dataset.",
+            "Database Design": "Design and document a relational schema for a real use case; include query optimization notes.",
+            "Security": "Implement JWT auth + RBAC in a project; document your security threat model.",
+            "API Development": "Build and document a REST/GraphQL API with OpenAPI spec and automated tests.",
+        }
+        for req in requirements:
+            if req not in covered_reqs:
+                suggestion = SUGGESTIONS.get(req, f"Add a project that demonstrates {req} to strengthen your portfolio for this role.")
+                unmapped.append({"requirement": req, "suggestion": suggestion})
+
+        # Compute coverage
+        coverage_pct = round(len(covered_reqs) / max(len(requirements), 1) * 100)
+        mapped_count = len(covered_reqs)
+        total_count = len(requirements)
+
+        if coverage_pct >= 75:
+            verdict = f"Strong evidence across {mapped_count} of {total_count} requirements — well positioned for this role."
+        elif coverage_pct >= 50:
+            verdict = f"Moderate evidence for {mapped_count} of {total_count} requirements — a few strategic projects will close the gap."
+        else:
+            verdict = f"Limited evidence for only {mapped_count} of {total_count} requirements — focus on building targeted portfolio projects before applying."
+
+        return {
+            "job_id": job.id,
+            "job_title": job_title,
+            "company": company,
+            "coverage_pct": coverage_pct,
+            "mapped_projects": mapped_projects,
+            "unmapped_requirements": unmapped,
+            "overall_verdict": verdict,
+        }

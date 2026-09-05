@@ -9,7 +9,8 @@ from app.models.models import User, Job, Project
 from app.schemas.schemas import (
     ReadinessOut, CompanyIntelligenceOut, CandidateBenchmarkOut,
     PreparationPlanOut, ResumeDefenseRequest, ResumeDefenseResponse,
-    CompanyBriefOut
+    CompanyBriefOut, EvidenceMapResponse,
+    STARStoryReviewRequest, STARStoryReviewResponse,
 )
 from app.services.readiness import ReadinessEngine
 from app.services.company_intelligence import CompanyIntelligenceService
@@ -111,13 +112,6 @@ def get_resume_defense(
     return ResumeDefenseResponse(**defense_data)
 
 
-from app.schemas.schemas import (
-    ReadinessOut, CompanyIntelligenceOut, CandidateBenchmarkOut,
-    PreparationPlanOut, ResumeDefenseRequest, ResumeDefenseResponse,
-    CompanyBriefOut, STARStoryReviewRequest, STARStoryReviewResponse
-)
-
-
 @prep_router.get("/company-brief/{job_id}", response_model=CompanyBriefOut)
 def get_company_brief(
     job_id: UUID,
@@ -150,3 +144,20 @@ def review_star_story(
     )
 
     return STARStoryReviewResponse(**review_data)
+
+
+@prep_router.get("/evidence-map/{job_id}", response_model=EvidenceMapResponse)
+def get_evidence_map(
+    job_id: UUID,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Map user's portfolio projects to job requirements and return coverage analysis."""
+    job = db.query(Job).filter(Job.id == job_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    prep_engine = PrepHubEngine(db)
+    data = prep_engine.generate_evidence_map(user, job)
+
+    return EvidenceMapResponse(**data)

@@ -450,3 +450,32 @@ class CoverLetterRequest(BaseModel):
 class CoverLetterResponse(BaseModel):
     cover_letter: str
     job_id: uuid.UUID
+
+
+# ────────────────────────────────────────────────────────────────────────────
+# Phase 5: Evidence Map Schemas
+# ────────────────────────────────────────────────────────────────────────────
+
+class ProjectEvidenceRecord(BaseModel):
+    """A user project mapped to one or more job requirements."""
+    project_id: str
+    project_title: str
+    matched_requirements: List[str]
+    matched_skills: List[str]
+    strength: str          # "strong" | "moderate" | "weak"
+    talking_point: str     # Ready-to-use interview talking point
+
+
+class UnmappedRequirement(BaseModel):
+    requirement: str
+    suggestion: str        # How to address this gap
+
+
+class EvidenceMapResponse(BaseModel):
+    job_id: uuid.UUID
+    job_title: str
+    company: str
+    coverage_pct: int                         # 0-100
+    mapped_projects: List[ProjectEvidenceRecord]
+    unmapped_requirements: List[UnmappedRequirement]
+    overall_verdict: str                      # e.g. "Strong evidence for 4 of 6 requirements"
