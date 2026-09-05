@@ -138,7 +138,10 @@ function FunnelPanel() {
   );
 }
 
-function ApplicationCard({ app }: { app: ApplicationOut }) {
+import { ApplicationTimelineModal } from '../../components/job/ApplicationTimelineModal';
+import { ExecutiveDashboardPanel } from '../../components/dashboard/ExecutiveDashboardPanel';
+
+function ApplicationCard({ app, onOpenTimeline }: { app: ApplicationOut; onOpenTimeline: (id: string) => void }) {
   const navigation = useNavigation<Nav>();
   const { colors } = useTheme();
   const qc = useQueryClient();
@@ -210,14 +213,24 @@ function ApplicationCard({ app }: { app: ApplicationOut }) {
         ))}
       </View>
 
-      {/* Status badge */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-        {app.status === 'offer' && <Ionicons name="trophy-outline" size={13} color={colors.success} />}
-        <View style={[styles.statusBadge, { backgroundColor: statusColor + '18', borderColor: statusColor + '40' }]}>
-          <Text style={[styles.statusText, { color: statusColor }]}>
-            {STATUS_LABELS[app.status] ?? app.status}
-          </Text>
+      {/* Status badge & timeline button */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+          {app.status === 'offer' && <Ionicons name="trophy-outline" size={13} color={colors.success} />}
+          <View style={[styles.statusBadge, { backgroundColor: statusColor + '18', borderColor: statusColor + '40' }]}>
+            <Text style={[styles.statusText, { color: statusColor }]}>
+              {STATUS_LABELS[app.status] ?? app.status}
+            </Text>
+          </View>
         </View>
+        <TouchableOpacity
+          style={[styles.timelineBtn, { borderColor: colors.border }]}
+          onPress={() => onOpenTimeline(app.id)}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
+          <Feather name="clock" size={12} color={colors.textMuted} />
+          <Text style={[styles.timelineBtnText, { color: colors.textMuted }]}>Timeline</Text>
+        </TouchableOpacity>
       </View>
     </TouchableOpacity>
   );
@@ -225,6 +238,8 @@ function ApplicationCard({ app }: { app: ApplicationOut }) {
 
 export function ApplicationsScreen() {
   const { colors } = useTheme();
+  const [activeTimelineId, setActiveTimelineId] = useState<string | null>(null);
+
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['applications'],
     queryFn: () => api.getApplications(),
@@ -259,13 +274,16 @@ export function ApplicationsScreen() {
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
-        renderItem={({ item }) => <ApplicationCard app={item} />}
+        renderItem={({ item }) => (
+          <ApplicationCard app={item} onOpenTimeline={(id) => setActiveTimelineId(id)} />
+        )}
         ListHeaderComponent={
           <>
             <View style={[styles.header, { borderBottomColor: colors.border }]}>
               <Text style={[styles.title, { color: colors.textPrimary }]}>Applications</Text>
               <Text style={[styles.subtitle, { color: colors.textMuted }]}>{data?.length ?? 0} total</Text>
             </View>
+            <ExecutiveDashboardPanel />
             <FunnelPanel />
           </>
         }
@@ -279,9 +297,14 @@ export function ApplicationsScreen() {
           </View>
         }
       />
+      <ApplicationTimelineModal
+        applicationId={activeTimelineId}
+        onClose={() => setActiveTimelineId(null)}
+      />
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
@@ -330,6 +353,12 @@ const styles = StyleSheet.create({
     borderRadius: Radius.full, borderWidth: 1,
   },
   statusText: { fontSize: Typography.xs, fontWeight: '700' },
+  timelineBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    paddingHorizontal: 8, paddingVertical: 4,
+    borderRadius: Radius.full, borderWidth: 1,
+  },
+  timelineBtnText: { fontSize: 10, fontWeight: '600' },
   empty: { alignItems: 'center', paddingTop: 80, gap: Spacing.base },
   emptyTitle: { fontSize: Typography.xl, fontWeight: '700' },
   emptySubtitle: {
@@ -337,6 +366,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing['2xl'], lineHeight: Typography.base * 1.6,
   },
 });
+
 
 const funnelStyles = StyleSheet.create({
   panel: {

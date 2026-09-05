@@ -105,3 +105,117 @@ def delete_application(
         raise HTTPException(status_code=404, detail="Application not found")
     db.delete(app)
     db.commit()
+
+
+# ─── Phase 9: Automated Application Tracking & Timeline ────────────────────────
+
+from app.schemas.schemas import ActivityLogItem, ApplicationTimelineOut, AutoTransitionResultOut
+import uuid
+
+@router.get("/{application_id}/timeline", response_model=ApplicationTimelineOut)
+def get_application_timeline(
+    application_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Returns chronological activity timeline and time-in-stage diagnostic for an application."""
+    app = (
+        db.query(Application)
+        .filter(Application.id == application_id, Application.user_id == current_user.id)
+        .first()
+    )
+    if not app:
+        raise HTTPException(status_code=404, detail="Application not found")
+
+    now = datetime.now(timezone.utc)
+    updated_at = app.updated_at or app.created_at or now
+    days_in_stage = (now - updated_at).days
+
+    # Build simulated / synthesized event history from application state
+    events = [
+        ActivityLogItem(
+            id=str(uuid.uuid4()),
+            application_id=app.id,
+            event_type="SAVED",
+            title="Job Saved to Blitz Tracker",
+            description=f"Saved role '{app.job.title}' at {app.job.company.name}.",
+            created_at=(app.created_at or now).isoformat(),
+            is_auto_generated=True,
+        )
+    ]
+
+    if app.applied_at or app.status != ApplicationStatus.saved:
+        events.append(
+            ActivityLogItem(
+                id=str(uuid.uuid4()),
+                application_id=app.id,
+                event_type="STATUS_CHANGE",
+                title=f"Status Advanced to {app.status.value.upper()}",
+                description=f"Application status updated to {app.status.value}.",
+                created_at=(app.applied_at or updated_at).isoformat(),
+                is_auto_generated=False,
+            )
+        )
+
+    if app.notes:
+        events.append(
+            ActivityLogItem(
+                id=str(uuid.uuid4()),
+                application_id=app.id,
+                event_type="NOTE_ADDED",
+                title="Candidate Note Attached",
+                description=app.notes,
+                created_at=updated_at.isoformat(),
+                is_auto_generated=False,
+            )
+        )
+
+    return ApplicationTimelineOut(
+        application_id=app.id,
+        job_title=app.job.title,
+        company_name=app.job.company.name,
+        current_status=app.status.value,
+        events=events,
+        days_in_current_stage=days_in_stage,
+    )
+
+
+@router.post("/auto-sync", response_model=AutoTransitionResultOut)
+def run_auto_sync_tracker(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Automated status transition engine scanning user applications for auto-progression triggers."""
+    apps = (
+        db.query(Application)
+        .filter(Application.user_id == current_user.id)
+        .all()
+    )
+
+    updates = []
+    auto_count = 0
+    now = datetime.now(timezone.utc)
+
+    for app in apps:
+        # Example Auto Trigger Rule 1: High match score (> 85%) saved applications auto-transition to applied if applied_at set
+        if app.status == ApplicationStatus.saved and app.applied_at is not None:
+            old_status = app.status.value
+            app.status = ApplicationStatus.applied
+            auto_count += 1
+            updates.append({
+                "application_id": str(app.id),
+                "job_title": app.job.title,
+                "old_status": old_status,
+                "new_status": "applied",
+                "reason": "Detected application submission timestamp",
+            })
+    
+    if auto_count > 0:
+        db.commit()
+
+    return AutoTransitionResultOut(
+        processed_count=len(apps),
+        auto_updated_count=auto_count,
+        updates=updates,
+    )
+

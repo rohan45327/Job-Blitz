@@ -305,6 +305,55 @@ export interface DetailedFunnelAnalyticsOut {
   top_insight: string;
 }
 
+export interface ActivityLogItem {
+  id: string;
+  application_id: string;
+  event_type: string;
+  title: string;
+  description?: string;
+  created_at: string;
+  is_auto_generated: boolean;
+}
+
+export interface ApplicationTimelineOut {
+  application_id: string;
+  job_title: string;
+  company_name: string;
+  current_status: string;
+  events: ActivityLogItem[];
+  days_in_current_stage: number;
+}
+
+export interface AutoTransitionResultOut {
+  processed_count: number;
+  auto_updated_count: number;
+  updates: Array<{
+    application_id: string;
+    job_title: string;
+    old_status: string;
+    new_status: string;
+    reason: string;
+  }>;
+}
+
+export interface ExecutiveKPIMetric {
+  label: string;
+  value: string;
+  change: string;
+  status_level: 'positive' | 'neutral' | 'warning';
+}
+
+export interface ExecutiveSummaryOut {
+  total_pipeline_value: number;
+  active_applications: number;
+  interview_conversion_rate: number;
+  average_readiness_score: number;
+  weekly_velocity_count: number;
+  top_targeted_skill: string;
+  kpis: ExecutiveKPIMetric[];
+  strategic_recommendation: string;
+}
+
 export interface ResumeUploadResponse {
   resume: ResumeOut;
   extracted_keywords: string[];
@@ -635,6 +684,18 @@ class ApiClient {
 
   getDetailedFunnel() {
     return this.request<DetailedFunnelAnalyticsOut>('GET', '/analytics/funnel/detailed');
+  }
+
+  getApplicationTimeline(application_id: string) {
+    return this.request<ApplicationTimelineOut>('GET', `/applications/${application_id}/timeline`);
+  }
+
+  runAutoSyncTracker() {
+    return this.request<AutoTransitionResultOut>('POST', '/applications/auto-sync');
+  }
+
+  getExecutiveSummary() {
+    return this.request<ExecutiveSummaryOut>('GET', '/analytics/executive-summary');
   }
 }
 

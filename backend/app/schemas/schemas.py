@@ -542,3 +542,55 @@ class RoleFitDiagnosticsResponse(BaseModel):
     matching_strengths: List[str]
     risk_factors: List[str]
     executive_verdict: str
+
+
+# ────────────────────────────────────────────────────────────────────────────
+# Phase 9: Automated Application Tracking & Timeline Schemas
+# ────────────────────────────────────────────────────────────────────────────
+
+class ActivityLogItem(BaseModel):
+    id: str
+    application_id: uuid.UUID
+    event_type: str        # e.g. "STATUS_CHANGE", "EMAIL_SYNC", "NOTE_ADDED", "INTERVIEW_SCHEDULED"
+    title: str
+    description: Optional[str] = None
+    created_at: str        # ISO timestamp string
+    is_auto_generated: bool = False
+
+
+class ApplicationTimelineOut(BaseModel):
+    application_id: uuid.UUID
+    job_title: str
+    company_name: str
+    current_status: str
+    events: List[ActivityLogItem]
+    days_in_current_stage: int
+
+
+class AutoTransitionResultOut(BaseModel):
+    processed_count: int
+    auto_updated_count: int
+    updates: List[dict]    # [{"application_id": "...", "old_status": "saved", "new_status": "applied", "reason": "..."}]
+
+
+# ────────────────────────────────────────────────────────────────────────────
+# Phase 10: Executive Dashboard Schemas
+# ────────────────────────────────────────────────────────────────────────────
+
+class ExecutiveKPIMetric(BaseModel):
+    label: str
+    value: str
+    change: str            # e.g. "+12% this week"
+    status_level: str      # "positive" | "neutral" | "warning"
+
+
+class ExecutiveSummaryOut(BaseModel):
+    total_pipeline_value: int
+    active_applications: int
+    interview_conversion_rate: float
+    average_readiness_score: int
+    weekly_velocity_count: int
+    top_targeted_skill: str
+    kpis: List[ExecutiveKPIMetric]
+    strategic_recommendation: str
+
