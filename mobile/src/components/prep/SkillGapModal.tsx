@@ -30,7 +30,7 @@ export function SkillGapModal({ visible, jobId, onClose }: Props) {
 
   const renderGapCard = (item: SkillRemediation, index: number) => {
     const isCritical = item.category === 'critical';
-    const badgeColor = isCritical ? (colors.error || '#EF4444') : (colors.primary || '#6366F1');
+    const badgeColor = isCritical ? (colors.warning || '#EF4444') : (colors.primary || '#6366F1');
 
     return (
       <View key={index} style={[styles.gapCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>

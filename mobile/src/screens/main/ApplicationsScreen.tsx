@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
-  ActivityIndicator, Alert
+  ActivityIndicator, Alert,
 } from 'react-native';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { api, ApplicationOut } from '../../api/client';
+import {
+  api, ApplicationOut, DetailedFunnelAnalyticsOut, FunnelStageMetric,
+} from '../../api/client';
 import { Typography, Spacing, Radius, Shadow } from '../../theme/tokens';
 import { useTheme } from '../../theme/ThemeContext';
 import { useNavigation } from '@react-navigation/native';
@@ -25,6 +27,116 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 type Nav = NativeStackNavigationProp<RootStackParams>;
+
+// ── Funnel Stage Bar ──────────────────────────────────────────────────────────
+
+const STAGE_COLORS_KEYS = ['applied', 'online_assessment', 'interview', 'offer'];
+
+function StageBar({ stage, maxCount, colors }: {
+  stage: FunnelStageMetric; maxCount: number; colors: any;
+}) {
+  const STAGE_COLOR_MAP: Record<string, string> = {
+    applied:           colors.info,
+    online_assessment: colors.warning,
+    interview:         colors.primary,
+    offer:             colors.success,
+  };
+  const color = STAGE_COLOR_MAP[stage.stage] ?? colors.textMuted;
+  const barPct = maxCount > 0 ? (stage.count / maxCount) * 100 : 0;
+  return (
+    <View style={funnelStyles.stageRow}>
+      <Text style={[funnelStyles.stageLabel, { color: colors.textSecondary }]} numberOfLines={1}>
+        {stage.label}
+      </Text>
+      <View style={[funnelStyles.track, { backgroundColor: colors.border }]}>
+        <View style={[funnelStyles.fill, { width: `${barPct}%` as any, backgroundColor: color }]} />
+      </View>
+      <View style={funnelStyles.stageMeta}>
+        <Text style={[funnelStyles.stageCount, { color: colors.textPrimary }]}>{stage.count}</Text>
+        <Text style={[funnelStyles.stageConv, { color }]}>{stage.conversion_from_applied_pct}%</Text>
+      </View>
+    </View>
+  );
+}
+
+// ── Funnel Panel ──────────────────────────────────────────────────────────────
+
+function FunnelPanel() {
+  const { colors } = useTheme();
+  const [expanded, setExpanded] = useState(true);
+
+  const { data, isLoading } = useQuery<DetailedFunnelAnalyticsOut>({
+    queryKey: ['funnel-detailed'],
+    queryFn: () => api.getDetailedFunnel(),
+    retry: 1,
+    staleTime: 60_000,
+  });
+
+  const maxCount = data ? Math.max(...data.stages.map((s) => s.count), 1) : 1;
+
+  const pills = data
+    ? [
+        { label: 'Applied',   value: String(data.total_applied),         color: colors.info },
+        { label: 'Response',  value: `${data.response_rate_pct}%`,       color: colors.warning },
+        { label: 'Interview', value: `${data.interview_rate_pct}%`,      color: colors.primary },
+        { label: 'Offer',     value: `${data.offer_rate_pct}%`,          color: colors.success },
+      ]
+    : [];
+
+  return (
+    <View style={[funnelStyles.panel, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+      <TouchableOpacity
+        style={funnelStyles.panelHeader}
+        onPress={() => setExpanded((v) => !v)}
+        activeOpacity={0.75}
+      >
+        <View style={funnelStyles.panelTitleRow}>
+          <Feather name="bar-chart-2" size={14} color={colors.primary} />
+          <Text style={[funnelStyles.panelTitle, { color: colors.textPrimary }]}>Funnel Analytics</Text>
+        </View>
+        <Feather name={expanded ? 'chevron-up' : 'chevron-down'} size={14} color={colors.textMuted} />
+      </TouchableOpacity>
+
+      {expanded && (
+        <>
+          {isLoading ? (
+            <ActivityIndicator size="small" color={colors.primary} style={{ marginVertical: 16 }} />
+          ) : data ? (
+            <>
+              {/* Conversion rate pills */}
+              <View style={funnelStyles.metricsRow}>
+                {pills.map((p) => (
+                  <View
+                    key={p.label}
+                    style={[funnelStyles.metricPill, { borderColor: p.color + '40', backgroundColor: p.color + '12' }]}
+                  >
+                    <Text style={[funnelStyles.metricValue, { color: p.color }]}>{p.value}</Text>
+                    <Text style={[funnelStyles.metricLabel, { color: colors.textMuted }]}>{p.label}</Text>
+                  </View>
+                ))}
+              </View>
+
+              {/* Stage progress bars */}
+              <View style={funnelStyles.stageList}>
+                {data.stages.map((s) => (
+                  <StageBar key={s.stage} stage={s} maxCount={maxCount} colors={colors} />
+                ))}
+              </View>
+
+              {/* Top insight */}
+              <View style={[funnelStyles.insightRow, { backgroundColor: colors.primary + '10', borderColor: colors.primary + '30' }]}>
+                <Feather name="zap" size={11} color={colors.primary} />
+                <Text style={[funnelStyles.insightText, { color: colors.textSecondary }]}>
+                  {data.top_insight}
+                </Text>
+              </View>
+            </>
+          ) : null}
+        </>
+      )}
+    </View>
+  );
+}
 
 function ApplicationCard({ app }: { app: ApplicationOut }) {
   const navigation = useNavigation<Nav>();
@@ -46,7 +158,10 @@ function ApplicationCard({ app }: { app: ApplicationOut }) {
 
   const updateStatus = useMutation({
     mutationFn: (status: string) => api.updateApplicationStatus(app.id, status),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['applications'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['applications'] });
+      qc.invalidateQueries({ queryKey: ['funnel-detailed'] });
+    },
     onError: (e: any) => Alert.alert('Error', e.message),
   });
 
@@ -139,16 +254,21 @@ export function ApplicationsScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={[styles.header, { borderBottomColor: colors.border }]}>
-        <Text style={[styles.title, { color: colors.textPrimary }]}>Applications</Text>
-        <Text style={[styles.subtitle, { color: colors.textMuted }]}>{data?.length ?? 0} total</Text>
-      </View>
       <FlatList
         data={data ?? []}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
         renderItem={({ item }) => <ApplicationCard app={item} />}
+        ListHeaderComponent={
+          <>
+            <View style={[styles.header, { borderBottomColor: colors.border }]}>
+              <Text style={[styles.title, { color: colors.textPrimary }]}>Applications</Text>
+              <Text style={[styles.subtitle, { color: colors.textMuted }]}>{data?.length ?? 0} total</Text>
+            </View>
+            <FunnelPanel />
+          </>
+        }
         ListEmptyComponent={
           <View style={styles.empty}>
             <Feather name="clipboard" size={40} color={colors.textMuted} />
@@ -175,10 +295,11 @@ const styles = StyleSheet.create({
   },
   title: { fontSize: Typography['2xl'], fontWeight: '800', letterSpacing: -0.5 },
   subtitle: { fontSize: Typography.sm, marginTop: 3 },
-  list: { paddingHorizontal: Spacing.base, paddingBottom: 160 },
+  list: { paddingBottom: 160 },
   card: {
     borderRadius: Radius.xl,
     padding: Spacing.base,
+    marginHorizontal: Spacing.base,
     marginVertical: 6,
     borderWidth: 1,
     ...Shadow.sm,
@@ -215,4 +336,51 @@ const styles = StyleSheet.create({
     fontSize: Typography.base, textAlign: 'center',
     paddingHorizontal: Spacing['2xl'], lineHeight: Typography.base * 1.6,
   },
+});
+
+const funnelStyles = StyleSheet.create({
+  panel: {
+    marginHorizontal: Spacing.base,
+    marginBottom: Spacing.base,
+    borderRadius: Radius.xl,
+    borderWidth: 1,
+    overflow: 'hidden',
+    ...Shadow.sm,
+  },
+  panelHeader: {
+    flexDirection: 'row', alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.base, paddingVertical: 12,
+  },
+  panelTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  panelTitle: { fontSize: Typography.sm, fontWeight: '700', letterSpacing: 0.2 },
+  metricsRow: {
+    flexDirection: 'row',
+    paddingHorizontal: Spacing.base,
+    gap: Spacing.sm,
+    marginBottom: Spacing.sm,
+  },
+  metricPill: {
+    flex: 1, alignItems: 'center', paddingVertical: 8,
+    borderRadius: Radius.md, borderWidth: 1,
+  },
+  metricValue: { fontSize: Typography.base, fontWeight: '800' },
+  metricLabel: { fontSize: 9, fontWeight: '600', marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.5 },
+  stageList: {
+    paddingHorizontal: Spacing.base, paddingBottom: Spacing.sm, gap: 6,
+  },
+  stageRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
+  stageLabel: { fontSize: Typography.xs, fontWeight: '600', width: 72 },
+  track: { flex: 1, height: 6, borderRadius: 999, overflow: 'hidden' },
+  fill: { height: '100%', borderRadius: 999 },
+  stageMeta: { flexDirection: 'row', gap: 4, minWidth: 64, justifyContent: 'flex-end' },
+  stageCount: { fontSize: Typography.xs, fontWeight: '700', width: 20, textAlign: 'right' },
+  stageConv: { fontSize: Typography.xs, fontWeight: '600', width: 40, textAlign: 'right' },
+  insightRow: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: 6,
+    marginHorizontal: Spacing.base, marginBottom: 12,
+    paddingHorizontal: 10, paddingVertical: 8,
+    borderRadius: Radius.md, borderWidth: 1,
+  },
+  insightText: { flex: 1, fontSize: Typography.xs, lineHeight: 16, fontStyle: 'italic' },
 });

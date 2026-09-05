@@ -73,6 +73,7 @@ export const Typography = {
     bold: 'System',
   },
 
+  // Font sizes (direct access)
   xs: 11,
   sm: 13,
   base: 15,
@@ -82,6 +83,28 @@ export const Typography = {
   '2xl': 28,
   '3xl': 34,
   '4xl': 42,
+
+  // Font sizes (nested access)
+  fontSize: {
+    xs: 11,
+    sm: 13,
+    base: 15,
+    md: 17,
+    lg: 20,
+    xl: 24,
+    '2xl': 28,
+    '3xl': 34,
+    '4xl': 42,
+  },
+
+  fontWeight: {
+    regular: '400',
+    medium: '500',
+    semibold: '600',
+    semiBold: '600',
+    bold: '700',
+    heavy: '800',
+  },
 
   lineHeight: {
     tight: 1.2,

@@ -285,6 +285,26 @@ export interface OutcomeAnalyticsOut {
   interview_rate_percent: number;
 }
 
+export interface FunnelStageMetric {
+  stage: string;
+  label: string;
+  count: number;
+  conversion_from_applied_pct: number;
+  drop_off_pct: number;
+}
+
+export interface DetailedFunnelAnalyticsOut {
+  total_tracked: number;
+  total_applied: number;
+  total_active: number;
+  offer_rate_pct: number;
+  rejection_rate_pct: number;
+  response_rate_pct: number;
+  interview_rate_pct: number;
+  stages: FunnelStageMetric[];
+  top_insight: string;
+}
+
 export interface ResumeUploadResponse {
   resume: ResumeOut;
   extracted_keywords: string[];
@@ -611,6 +631,10 @@ class ApiClient {
 
   getOutcomeAnalytics() {
     return this.request<OutcomeAnalyticsOut>('GET', '/analytics/funnel');
+  }
+
+  getDetailedFunnel() {
+    return this.request<DetailedFunnelAnalyticsOut>('GET', '/analytics/funnel/detailed');
   }
 }
 

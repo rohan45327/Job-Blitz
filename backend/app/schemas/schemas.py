@@ -349,6 +349,24 @@ class OutcomeAnalyticsOut(BaseModel):
     interview_rate_percent: float
 
 
+class FunnelStageMetric(BaseModel):
+    stage: str
+    label: str
+    count: int
+    conversion_from_applied_pct: float   # % of applied that reached this stage
+    drop_off_pct: float                  # % lost entering this stage from previous
+
+
+class DetailedFunnelAnalyticsOut(BaseModel):
+    total_tracked: int
+    total_applied: int
+    total_active: int
+    offer_rate_pct: float
+    rejection_rate_pct: float
+    response_rate_pct: float
+    interview_rate_pct: float
+    stages: List[FunnelStageMetric]
+    top_insight: str                     # A single actionable insight sentence
 
 class ResumeCreate(BaseModel):
     category: str  # e.g. "AI/ML", "SDE", "Data Analysis", "Product", "Internship"
