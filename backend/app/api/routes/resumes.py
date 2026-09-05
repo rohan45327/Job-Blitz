@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.models.models import User, Resume
-from app.schemas.schemas import ResumeCreate, ResumeOut, ResumeUploadResponse
+from app.schemas.schemas import ResumeCreate, ResumeOut, ResumeUploadResponse, ResumeRecommendResponse
 from app.api.deps import get_current_user
 from app.services.resume_parser import parse_resume
 
@@ -161,7 +161,6 @@ def recommend_resume_category(
 ):
     """Recommend the optimal uploaded resume category for a specific job posting."""
     from app.models.models import Job
-    from app.schemas.schemas import ResumeRecommendResponse
     from app.services.prep_hub import detect_engineering_domain
 
     job = db.query(Job).filter(Job.id == job_id).first()
