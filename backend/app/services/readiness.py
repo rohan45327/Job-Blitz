@@ -103,3 +103,82 @@ class ReadinessEngine:
             improvements.append("Complete a 15-minute Resume Defense & Technical Mock screen.")
 
         return overall_readiness, breakdown, improvements
+
+    def classify_skill_gaps(self, user: User, job: Job) -> Dict:
+        """
+        Classifies missing job skills into Critical vs Secondary gaps,
+        and provides specific remediation strategies for each gap.
+        """
+        user_skills = {s.name.lower() for s in user.skills} if user.skills else set()
+        if user.resumes:
+            for r in user.resumes:
+                if r.defining_keywords:
+                    for kw in r.defining_keywords:
+                        user_skills.add(str(kw).lower())
+
+        job_skills = {s.name.lower() for s in job.skills} if job.skills else set()
+        if not job_skills and job.description:
+            desc_lower = job.description.lower()
+            for tech in ["python", "javascript", "typescript", "react", "fastapi", "sql", "aws", "docker", "pytorch", "node", "redis", "postgresql", "kubernetes"]:
+                if tech in desc_lower:
+                    job_skills.add(tech)
+
+        missing_skills = sorted(list(job_skills - user_skills))
+
+        # Core critical skill keywords
+        CORE_CRITICAL = {
+            "python", "javascript", "typescript", "java", "c++", "golang",
+            "react", "react native", "fastapi", "django", "node", "sql",
+            "postgresql", "system design", "data structures", "machine learning",
+            "pytorch", "tensorflow", "spark", "aws", "gcp"
+        }
+
+        role_lower = (job.title or "").lower()
+
+        critical_gaps = []
+        secondary_gaps = []
+
+        for sk in missing_skills:
+            # Determine category
+            is_critical = (sk in CORE_CRITICAL) or any(term in role_lower for term in sk.split())
+
+            if is_critical:
+                strategy = f"Build a focused feature module utilizing {sk.title()} and add key architecture notes to portfolio."
+                hours = 6
+                priority = "high"
+                gap_item = {
+                    "skill_name": sk.title(),
+                    "category": "critical",
+                    "remediation_strategy": strategy,
+                    "estimated_hours": hours,
+                    "priority": priority,
+                }
+                critical_gaps.append(gap_item)
+            else:
+                strategy = f"Review core concepts of {sk.title()} for conceptual & screening interview questions."
+                hours = 2
+                priority = "medium" if len(secondary_gaps) < 2 else "low"
+                gap_item = {
+                    "skill_name": sk.title(),
+                    "category": "secondary",
+                    "remediation_strategy": strategy,
+                    "estimated_hours": hours,
+                    "priority": priority,
+                }
+                secondary_gaps.append(gap_item)
+
+        total_missing = len(missing_skills)
+        if total_missing == 0:
+            summary = f"No missing skills identified for {job.title}. Your skill coverage is 100%!"
+        else:
+            summary = f"Found {len(critical_gaps)} critical skill gap(s) and {len(secondary_gaps)} secondary tool gap(s) for {job.title}."
+
+        return {
+            "job_id": job.id,
+            "role_title": job.title or "Role",
+            "total_missing_count": total_missing,
+            "critical_gaps": critical_gaps,
+            "secondary_gaps": secondary_gaps,
+            "summary": summary,
+        }
+

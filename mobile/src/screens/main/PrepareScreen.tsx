@@ -12,6 +12,7 @@ import { CompanyBriefModal } from '../../components/prep/CompanyBriefModal';
 import { ResumeDefenseModal } from '../../components/prep/ResumeDefenseModal';
 import { STARStoryModal } from '../../components/prep/STARStoryModal';
 import { EvidenceMapModal } from '../../components/prep/EvidenceMapModal';
+import { SkillGapModal } from '../../components/prep/SkillGapModal';
 import { ErrorCard } from '../../components/common/ErrorCard';
 import { cleanText } from '../../utils/cleanText';
 
@@ -38,6 +39,7 @@ export function PrepareScreen() {
   const [showDefenseModal, setShowDefenseModal] = useState(false);
   const [showStarModal, setShowStarModal] = useState(false);
   const [showEvidenceModal, setShowEvidenceModal] = useState(false);
+  const [showSkillGapModal, setShowSkillGapModal] = useState(false);
 
   // Fetch job feed for selector options (page_size 50 for broad choice)
   const { data: feedData, isError: isFeedError, refetch: refetchFeed } = useQuery({
@@ -133,6 +135,14 @@ export function PrepareScreen() {
       return;
     }
     setShowEvidenceModal(true);
+  };
+
+  const handleOpenSkillGaps = () => {
+    if (!targetJobId) {
+      Alert.alert('Notice', 'No target job selected yet.');
+      return;
+    }
+    setShowSkillGapModal(true);
   };
 
   return (
@@ -298,6 +308,22 @@ export function PrepareScreen() {
                   </View>
                 ))}
               </View>
+
+              {/* Skill Gap Classifier CTA */}
+              <TouchableOpacity
+                style={[styles.skillGapBanner, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}
+                onPress={handleOpenSkillGaps}
+                activeOpacity={0.8}
+              >
+                <View style={[styles.skillGapIconBox, { backgroundColor: '#EF44441A' }]}>
+                  <Feather name="target" size={18} color="#EF4444" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.skillGapBannerTitle, { color: colors.textPrimary }]}>Skill Gap Classifier & Remediation</Text>
+                  <Text style={[styles.skillGapBannerSub, { color: colors.textSecondary }]}>Critical vs secondary gaps with 2h-6h action plans</Text>
+                </View>
+                <Feather name="chevron-right" size={18} color={colors.textMuted} />
+              </TouchableOpacity>
             </View>
           </View>
         )}
@@ -499,6 +525,11 @@ export function PrepareScreen() {
             jobId={targetJobId}
             onClose={() => setShowEvidenceModal(false)}
           />
+          <SkillGapModal
+            visible={showSkillGapModal}
+            jobId={targetJobId}
+            onClose={() => setShowSkillGapModal(false)}
+          />
         </>
       )}
     </View>
@@ -545,6 +576,12 @@ const styles = StyleSheet.create({
   skillRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 2 },
   skillChip: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: Radius.full, borderWidth: 1 },
   skillText: { fontSize: 10, fontWeight: '600' },
+
+  skillGapLabel: { fontSize: Typography.xs, fontWeight: '700' },
+  skillGapBanner: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, padding: Spacing.md, borderRadius: Radius.lg, borderWidth: 1, marginTop: Spacing.md },
+  skillGapIconBox: { width: 34, height: 34, borderRadius: Radius.md, alignItems: 'center', justifyContent: 'center' },
+  skillGapBannerTitle: { fontSize: Typography.sm, fontWeight: '700' },
+  skillGapBannerSub: { fontSize: Typography.xs, marginTop: 2 },
 
   selectPromptBtn: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, padding: Spacing.lg, borderRadius: Radius.xl, borderWidth: 1 },
   selectPromptText: { fontSize: Typography.base, fontWeight: '700' },

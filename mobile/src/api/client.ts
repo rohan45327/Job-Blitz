@@ -219,6 +219,23 @@ export interface EvidenceMapResponse {
   key_takeaway: string;
 }
 
+export interface SkillRemediation {
+  skill_name: string;
+  category: 'critical' | 'secondary';
+  remediation_strategy: string;
+  estimated_hours: number;
+  priority: 'high' | 'medium' | 'low';
+}
+
+export interface SkillGapClassificationResponse {
+  job_id: string;
+  role_title: string;
+  total_missing_count: number;
+  critical_gaps: SkillRemediation[];
+  secondary_gaps: SkillRemediation[];
+  summary: string;
+}
+
 export interface CompanyBriefOut {
   company_name: string;
   role_title: string;
@@ -521,6 +538,10 @@ class ApiClient {
 
   getCandidateBenchmark(job_id: string) {
     return this.request<CandidateBenchmarkOut>('GET', `/readiness/jobs/${job_id}/candidate-benchmark`);
+  }
+
+  getSkillGaps(job_id: string) {
+    return this.request<SkillGapClassificationResponse>('GET', `/readiness/jobs/${job_id}/skill-gaps`);
   }
 
   // ── Prep Hub ──────────────────────────────────────────────────────────────

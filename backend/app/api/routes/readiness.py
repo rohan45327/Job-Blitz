@@ -9,7 +9,7 @@ from app.models.models import User, Job, Project
 from app.schemas.schemas import (
     ReadinessOut, CompanyIntelligenceOut, CandidateBenchmarkOut,
     PreparationPlanOut, ResumeDefenseRequest, ResumeDefenseResponse,
-    CompanyBriefOut, EvidenceMapResponse,
+    CompanyBriefOut, EvidenceMapResponse, SkillGapClassificationResponse,
     STARStoryReviewRequest, STARStoryReviewResponse,
 )
 from app.services.readiness import ReadinessEngine
@@ -39,6 +39,21 @@ def get_job_readiness(
         breakdown=breakdown,
         top_improvements=improvements,
     )
+
+
+@router.get("/jobs/{job_id}/skill-gaps", response_model=SkillGapClassificationResponse)
+def get_job_skill_gaps(
+    job_id: UUID,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    job = db.query(Job).filter(Job.id == job_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    engine = ReadinessEngine(db)
+    result = engine.classify_skill_gaps(user, job)
+    return SkillGapClassificationResponse(**result)
 
 
 @router.get("/jobs/{job_id}/company-intelligence", response_model=CompanyIntelligenceOut)

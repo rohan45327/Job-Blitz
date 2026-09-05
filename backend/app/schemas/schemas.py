@@ -479,3 +479,25 @@ class EvidenceMapResponse(BaseModel):
     mapped_projects: List[ProjectEvidenceRecord]
     unmapped_requirements: List[UnmappedRequirement]
     overall_verdict: str                      # e.g. "Strong evidence for 4 of 6 requirements"
+
+
+# ────────────────────────────────────────────────────────────────────────────
+# Phase 6: Skill Gap Classifier Schemas
+# ────────────────────────────────────────────────────────────────────────────
+
+class SkillRemediation(BaseModel):
+    """Categorized skill gap with actionable remediation strategy."""
+    skill_name: str
+    category: str              # "critical" | "secondary"
+    remediation_strategy: str  # Practical recommendation to bridge the gap
+    estimated_hours: int       # Hours required to build working proof/evidence
+    priority: str              # "high" | "medium" | "low"
+
+
+class SkillGapClassificationResponse(BaseModel):
+    job_id: uuid.UUID
+    role_title: str
+    total_missing_count: int
+    critical_gaps: List[SkillRemediation]
+    secondary_gaps: List[SkillRemediation]
+    summary: str
