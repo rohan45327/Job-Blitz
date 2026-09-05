@@ -259,6 +259,24 @@ class PrepHubEngine:
         company_name = job.company.name if job.company else "Company"
         job_skills = [s.name for s in job.skills] if job.skills else []
 
+        # Find best matching resume category
+        rec_category = "Full-Stack"
+        if user.resumes:
+            for res in user.resumes:
+                if res.category:
+                    rec_category = res.category
+                    break
+
+        domain = detect_engineering_domain(title, job.description or "", job_skills)
+        if domain == "ai_ml":
+            rec_category = "AI / Machine Learning"
+        elif domain == "frontend_mobile":
+            rec_category = "Frontend / Mobile"
+        elif domain == "data_engineering":
+            rec_category = "Data Engineering"
+        elif domain == "devops_cloud":
+            rec_category = "DevOps / Infrastructure"
+
         proj_title = project.title if project else "Primary Technical Project"
         proj_skills = ", ".join(project.skills) if project and project.skills else ", ".join(job_skills[:3]) if job_skills else "Python, FastAPI, SQL"
 
@@ -277,13 +295,38 @@ class PrepHubEngine:
                 "question": f"How would you re-architect '{proj_title}' to support 10x scale under {company_name}'s production workload?",
                 "focus": "Scalability & Production Preparedness",
                 "suggested_defense": "Propose shifting synchronous API tasks to an event-driven queue (Redis/Kafka), adding a CDN for static assets, and implementing multi-region DB sharding."
+            },
+            {
+                "question": f"What testing strategy (Unit, Integration, End-to-End) did you deploy for '{proj_title}' to guarantee reliability?",
+                "focus": "Automated Testing & Code Reliability",
+                "suggested_defense": "Detail CI/CD pipeline automation, mock server setups, code coverage benchmarks (>80%), and regression testing prior to production release."
+            }
+        ]
+
+        vulnerabilities = [
+            {
+                "area": "Quantitative Metrics",
+                "vulnerability": "Resume points may lack concrete impact percentages or benchmark numbers.",
+                "mitigation": "Quantify outcomes during defense (e.g. 'Reduced p99 latency by 35%' or 'Handled 500+ requests/sec')."
+            },
+            {
+                "area": "Framework Trade-offs",
+                "vulnerability": "Interviewer may probe if you chose tools out of familiarity rather than technical necessity.",
+                "mitigation": "Articulate 2 concrete alternative solutions you evaluated and why your choice was superior for this workload."
+            },
+            {
+                "area": "Error Handling & Failure Modes",
+                "vulnerability": "Focus on happy-path execution without describing failure recovery mechanisms.",
+                "mitigation": "Highlight exponential backoff retry logic, circuit breaker implementation, and fallback UI states."
             }
         ]
 
         return {
             "job_id": job.id,
             "project_title": proj_title,
-            "potential_questions": questions
+            "recommended_resume_category": rec_category,
+            "potential_questions": questions,
+            "vulnerabilities": vulnerabilities,
         }
 
     def generate_company_brief(self, job: Job) -> Dict[str, Any]:

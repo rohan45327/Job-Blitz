@@ -263,15 +263,26 @@ class PreparationPlanOut(BaseModel):
     top_improvements: List[str]
 
 
-class ResumeDefenseRequest(BaseModel):
-    job_id: uuid.UUID
-    project_id: Optional[uuid.UUID] = None
+class ResumeVulnerability(BaseModel):
+    area: str
+    vulnerability: str
+    mitigation: str
 
 
 class ResumeDefenseResponse(BaseModel):
     job_id: uuid.UUID
-    project_title: Optional[str]
+    project_title: Optional[str] = None
+    recommended_resume_category: Optional[str] = None
     potential_questions: List[dict]  # [{"question": "...", "focus": "...", "suggested_defense": "..."}]
+    vulnerabilities: List[ResumeVulnerability] = []
+
+
+class ResumeRecommendResponse(BaseModel):
+    job_id: uuid.UUID
+    recommended_category: str
+    matching_score: float
+    reasoning: str
+    available_categories: List[str] = []
 
 
 class STARStoryCreate(BaseModel):

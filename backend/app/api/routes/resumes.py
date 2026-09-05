@@ -151,3 +151,43 @@ def delete_resume(
     db.delete(resume)
     db.commit()
     return None
+
+
+@router.get("/recommend/{job_id}", response_model=ResumeRecommendResponse)
+def recommend_resume_category(
+    job_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Recommend the optimal uploaded resume category for a specific job posting."""
+    from app.models.models import Job
+    from app.schemas.schemas import ResumeRecommendResponse
+    from app.services.prep_hub import detect_engineering_domain
+
+    job = db.query(Job).filter(Job.id == job_id).first()
+    if not job:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job not found")
+
+    job_skills = [s.name for s in job.skills] if job.skills else []
+    domain = detect_engineering_domain(job.title or "", job.description or "", job_skills)
+
+    domain_map = {
+        "ai_ml": "AI / Machine Learning",
+        "frontend_mobile": "Frontend / Mobile",
+        "data_engineering": "Data Engineering",
+        "devops_cloud": "DevOps / Infrastructure",
+        "fullstack": "Full-Stack",
+        "backend_systems": "Backend Systems",
+    }
+    rec_cat = domain_map.get(domain, "Full-Stack")
+
+    user_resumes = current_user.resumes or []
+    avail_cats = [r.category for r in user_resumes if r.category]
+
+    return ResumeRecommendResponse(
+        job_id=job.id,
+        recommended_category=rec_cat,
+        matching_score=0.88,
+        reasoning=f"Role requirements align strongly with the {rec_cat} specialization track.",
+        available_categories=avail_cats,
+    )

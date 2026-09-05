@@ -167,10 +167,26 @@ export interface PreparationPlanOut {
   top_improvements: string[];
 }
 
+export interface ResumeVulnerability {
+  area: string;
+  vulnerability: string;
+  mitigation: string;
+}
+
 export interface ResumeDefenseResponse {
   job_id: string;
   project_title: string | null;
+  recommended_resume_category?: string | null;
   potential_questions: { question: string; focus: string; suggested_defense: string }[];
+  vulnerabilities?: ResumeVulnerability[];
+}
+
+export interface ResumeRecommendResponse {
+  job_id: string;
+  recommended_category: string;
+  matching_score: number;
+  reasoning: string;
+  available_categories: string[];
 }
 
 export interface CompanyBriefOut {
@@ -449,6 +465,10 @@ class ApiClient {
 
   deleteResume(resumeId: string) {
     return this.request<void>('DELETE', `/resumes/${resumeId}`);
+  }
+
+  getRecommendedResume(jobId: string) {
+    return this.request<ResumeRecommendResponse>('GET', `/resumes/recommend/${jobId}`);
   }
 
   // ── AI ──────────────────────────────────────────────────────────────────────
