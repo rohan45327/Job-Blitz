@@ -24,6 +24,9 @@
       "channel": "production",
       "android": {
         "buildType": "app-bundle"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://jobblitz-nvgk.onrender.com/api/v1"
       }
     }
   },

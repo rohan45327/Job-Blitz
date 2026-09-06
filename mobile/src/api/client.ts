@@ -1,14 +1,11 @@
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 
+const DEFAULT_PROD_API_URL = 'https://jobblitz-nvgk.onrender.com/api/v1';
+
 const getBaseUrl = () => {
   if (process.env.EXPO_PUBLIC_API_URL) {
     return process.env.EXPO_PUBLIC_API_URL;
-  }
-
-  if (Platform.OS === 'web') {
-    const host = typeof window !== 'undefined' && window.location.hostname ? window.location.hostname : 'localhost';
-    return `http://${host}:8000/api/v1`;
   }
 
   const debuggerHost = Constants.expoConfig?.hostUri || Constants.manifest2?.extra?.expoGo?.developer?.tool;
@@ -19,11 +16,8 @@ const getBaseUrl = () => {
     }
   }
 
-  if (Platform.OS === 'android') {
-    return 'http://10.0.2.2:8000/api/v1';
-  }
-
-  return 'http://localhost:8000/api/v1';
+  // Fallback for standalone APK / production web builds
+  return DEFAULT_PROD_API_URL;
 };
 
 // ─── Types ────────────────────────────────────────────────────────────────────
