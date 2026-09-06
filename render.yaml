@@ -5,7 +5,7 @@ services:
     region: singapore
     rootDir: backend
     buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT --limit-max-requests 500 --timeout-keep-alive 5
     envVars:
       - key: DATABASE_URL
         fromDatabase:

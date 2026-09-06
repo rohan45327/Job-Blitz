@@ -59,7 +59,7 @@ app.include_router(projects.router, prefix="/api/v1")
 app.include_router(analytics.router, prefix="/api/v1")
 
 
-import threading
+import gc
 
 def auto_seed_jobs_if_empty():
     try:
@@ -73,6 +73,7 @@ def auto_seed_jobs_if_empty():
             inserted = seed_fast_jobs(db)
             print(f"Fast seed completed successfully. {inserted} jobs inserted into PostgreSQL.")
         db.close()
+        gc.collect()
     except Exception as e:
         print(f"Auto-seed exception: {e}")
 
