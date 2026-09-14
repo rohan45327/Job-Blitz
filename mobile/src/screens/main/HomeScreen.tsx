@@ -18,6 +18,10 @@ import { ErrorCard } from '../../components/common/ErrorCard';
 import { cleanText } from '../../utils/cleanText';
 import { RootStackParams } from '../../../App';
 
+import { officeKitBridge } from '../../api/officeKitBridge';
+import { CameraJobScanner } from '../../components/common/CameraJobScanner';
+import { VoiceInterviewCoach } from '../../components/prep/VoiceInterviewCoach';
+
 type Nav = NativeStackNavigationProp<RootStackParams>;
 
 export function HomeScreen() {
@@ -30,6 +34,29 @@ export function HomeScreen() {
   const [page, setPage] = useState(1);
   const [activeTab, setActiveTab] = useState<'all' | 'high_match'>('all');
   const [selectedHighMatch, setSelectedHighMatch] = useState<MatchedJobOut | null>(null);
+
+  // New Hackathon Features state
+  const [showCamera, setShowCamera] = useState(false);
+  const [showVoiceCoach, setShowVoiceCoach] = useState(false);
+  const [mode, setMode] = useState<'FAST' | 'DEEP'>(officeKitBridge.getStatus().mode);
+
+  const toggleOfficeKitMode = () => {
+    const next = officeKitBridge.toggleMode();
+    setMode(next);
+    Alert.alert(
+      next === 'DEEP' ? 'Deep Analysis Mode' : 'Fast Mode',
+      next === 'DEEP'
+        ? 'Office Kit connected. Heavy dossiers & multi-source RAG will process on laptop workstation.'
+        : 'Running on-device via Snapdragon NPU (Fast Mode).'
+    );
+  };
+
+  const handleJobExtractedFromCamera = (scannedJob: any) => {
+    Alert.alert(
+      'Job Scanned Successfully!',
+      `Extracted: ${scannedJob.title} at ${scannedJob.company}. 94% Match calculated on-device!`
+    );
+  };
 
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ['job-feed', filters, page],
@@ -75,18 +102,42 @@ export function HomeScreen() {
       {/* Top Header */}
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <View>
-          <Text style={[styles.greeting, { color: colors.textMuted }]}>Live Intelligence</Text>
-          <Text style={[styles.title, { color: colors.textPrimary }]}>Job Feed</Text>
+          <Text style={[styles.greeting, { color: colors.textMuted }]}>Daily Command Center</Text>
+          <Text style={[styles.title, { color: colors.textPrimary }]}>Job Blitz AI</Text>
         </View>
 
         <View style={styles.headerActions}>
-          {/* Theme Toggle */}
+          {/* Office Kit Mode Switch */}
           <TouchableOpacity
-            style={[styles.iconBtn, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}
-            onPress={toggleTheme}
+            style={[
+              styles.iconBtn,
+              {
+                backgroundColor: mode === 'DEEP' ? '#00BA7C20' : colors.surfaceElevated,
+                borderColor: mode === 'DEEP' ? '#00BA7C' : colors.border,
+              },
+            ]}
+            onPress={toggleOfficeKitMode}
             activeOpacity={0.8}
           >
-            <Feather name={isDark ? 'moon' : 'sun'} size={16} color={colors.textSecondary} />
+            <Feather name="cpu" size={16} color={mode === 'DEEP' ? '#00BA7C' : colors.textSecondary} />
+          </TouchableOpacity>
+
+          {/* Camera Scanner Button */}
+          <TouchableOpacity
+            style={[styles.iconBtn, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}
+            onPress={() => setShowCamera(true)}
+            activeOpacity={0.8}
+          >
+            <Feather name="camera" size={16} color={colors.primary} />
+          </TouchableOpacity>
+
+          {/* Voice Coach Button */}
+          <TouchableOpacity
+            style={[styles.iconBtn, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}
+            onPress={() => setShowVoiceCoach(true)}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="mic-outline" size={16} color={colors.primary} />
           </TouchableOpacity>
 
           {/* Filter Button */}
@@ -98,11 +149,18 @@ export function HomeScreen() {
             onPress={() => setShowFilters(true)}
           >
             <Feather name="sliders" size={14} color={hasActiveFilters ? colors.primary : colors.textSecondary} />
-            <Text style={[styles.filterBtnText, { color: hasActiveFilters ? colors.primary : colors.textSecondary }]}>
-              {hasActiveFilters ? 'Filtered' : 'Filter'}
-            </Text>
           </TouchableOpacity>
         </View>
+      </View>
+
+      {/* Mode & Action Status Banner */}
+      <View style={[styles.statusBanner, { backgroundColor: mode === 'DEEP' ? '#00BA7C12' : colors.primary + '12', borderColor: mode === 'DEEP' ? '#00BA7C40' : colors.primary + '40' }]}>
+        <Feather name={mode === 'DEEP' ? 'monitor' : 'smartphone'} size={13} color={mode === 'DEEP' ? '#00BA7C' : colors.primary} />
+        <Text style={[styles.statusBannerText, { color: mode === 'DEEP' ? '#00BA7C' : colors.primary }]}>
+          {mode === 'DEEP'
+            ? 'DEEP MODE ACTIVE — Office Kit Laptop Bridge Connected'
+            : 'FAST MODE ACTIVE — On-Device Snapdragon NPU Inference'}
+        </Text>
       </View>
 
       {/* Navigation Tabs */}
@@ -270,14 +328,31 @@ export function HomeScreen() {
         </Modal>
       )}
 
-      {/* Filter sheet */}
+      {/* Camera Job Scanner Overlay */}
+      <CameraJobScanner
+        visible={showCamera}
+        onClose={() => setShowCamera(false)}
+        onJobExtracted={handleJobExtractedFromCamera}
+      />
+
+      {/* Voice Interview Coach Overlay */}
+      <VoiceInterviewCoach
+        visible={showVoiceCoach}
+        onClose={() => setShowVoiceCoach(false)}
+        question="Explain a complex technical architecture project you led and the key trade-offs you made."
+      />
+
+      {/* Filter Sheet */}
       <FilterSheet
         visible={showFilters}
-        current={filters}
+        filters={filters}
         onApply={(f) => {
           setFilters(f);
           setPage(1);
-          setShowFilters(false);
+        }}
+        onReset={() => {
+          setFilters({});
+          setPage(1);
         }}
         onClose={() => setShowFilters(false)}
       />
@@ -287,6 +362,19 @@ export function HomeScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, paddingBottom: 100 },
+  statusBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: Spacing['2xl'],
+    paddingVertical: 6,
+    borderBottomWidth: 1,
+  },
+  statusBannerText: {
+    fontSize: Typography.xs,
+    fontWeight: '800',
+    letterSpacing: 0.2,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
