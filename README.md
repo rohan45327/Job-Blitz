@@ -1,158 +1,97 @@
-# Job Blitz
+# Job Blitz 🚀
 
-Job Blitz is an AI-powered Job Application Productivity Agent that reduces the
-repetitive work involved in finding, understanding, preparing for, applying to,
-and tracking job opportunities.
+Job Blitz is an AI-powered Job Application Productivity Agent that reduces the repetitive work involved in finding, understanding, preparing for, applying to, and tracking job opportunities.
 
-Instead of treating job hunting as a collection of disconnected tasks, Job Blitz
-turns it into one intelligent workflow.
+Instead of treating job hunting as a collection of disconnected tasks, Job Blitz turns it into one intelligent workflow.
 
-## Problem
+## 🌟 The Solution
 
-Job seekers repeatedly perform the same fragmented tasks:
-
-Find Job
-   ↓
-Read Job Description
-   ↓
-Understand Requirements
-   ↓
-Check Personal Fit
-   ↓
-Identify Skill Gaps
-   ↓
-Tailor Resume / Cover Letter
-   ↓
-Prepare for Interview
-   ↓
-Apply
-   ↓
-Track & Follow Up
-
-This consumes significant time and makes the application process inefficient.
-
-## Solution
-
-Job Blitz acts as an AI productivity layer over the complete job application
-workflow.
-
-It helps a candidate:
-
+Job Blitz acts as an AI productivity layer over the complete job application workflow. It helps a candidate:
 - Discover relevant opportunities
 - Understand job requirements
 - Calculate explainable job-fit and readiness scores
-- Identify missing skills
-- Generate a prioritized preparation roadmap
+- Identify missing skills and generate a prioritized preparation roadmap
 - Tailor resumes and cover letters
 - Prepare for role-specific interviews
 - Apply and track applications
 - Receive reminders and follow-ups
-- Analyze application outcomes
 
-## Hackathon Innovation
+## 🏗 Architecture & Tech Stack
 
-The hackathon version focuses specifically on productivity.
+### Frontend (Mobile App)
+Located in the `/mobile` directory, the frontend is a cross-platform mobile application.
+- **Framework:** React Native with Expo (SDK 51)
+- **Language:** TypeScript
+- **State Management:** Zustand
+- **Data Fetching:** TanStack React Query
+- **Navigation:** React Navigation (Bottom Tabs & Native Stack)
 
-The candidate provides a job opportunity and Job Blitz converts it into an
-actionable application workspace.
+### Backend (API & Background Workers)
+Located in the `/backend` directory, this drives the core logic, AI integrations, and data processing.
+- **Framework:** FastAPI (Python)
+- **Database:** PostgreSQL (ORM via SQLAlchemy & migrations via Alembic)
+- **Background Tasks:** Celery + Redis (Worker & Beat Scheduler)
+- **AI Integration:** Google Generative AI (Gemini) & OpenAI
+- **Utilities:** PDF/Docx Parsing (`pdfplumber`, `python-docx`) and Job Scraping (`python-jobspy`, `beautifulsoup4`)
 
-AI automatically determines:
+## 📂 Project Structure
 
-1. What the company wants
-2. How well the candidate matches
-3. What is missing
-4. What should be done first
-5. What documents should be prepared
-6. How the candidate should prepare
-7. What needs to happen next
+```text
+autopin/
+├── backend/               # FastAPI Backend Service
+│   ├── app/               # Application source code (Models, Routers, Services)
+│   ├── alembic/           # Database migration scripts
+│   ├── Dockerfile         # Docker configuration for backend services
+│   ├── requirements.txt   # Python dependencies
+│   └── .env.example       # Example environment variables
+├── mobile/                # Expo/React Native Mobile App
+│   ├── src/               # Application source code (Components, Screens, Navigation)
+│   ├── App.tsx            # App Entry Point
+│   ├── app.json           # Expo configuration
+│   ├── eas.json           # Expo Application Services build config
+│   └── package.json       # Node dependencies
+├── docker-compose.yml     # Local orchestration for DB, Redis, API, and Celery
+├── render.yaml            # Render Cloud deployment pipeline
+└── README.md              # Project documentation
+```
 
-The phone becomes the AI command center while the laptop is used for deeper
-document and application work through Office Kit.
+## 🚀 Pipelines & Deployment
 
-## Core Workflow
+### 1. Local Development Pipeline (`docker-compose.yml`)
+You can spin up the entire backend stack locally using Docker Compose. This pipeline automatically orchestrates:
+- **PostgreSQL Database** (`db`)
+- **Redis Cache/Broker** (`redis`)
+- **Database Migrations** (`migrate` - runs Alembic upgrades on startup)
+- **FastAPI Server** (`api` - runs with hot-reload)
+- **Celery Worker & Celery Beat** (`celery_worker`, `celery_beat`)
 
-DISCOVER<br>
-    ↓<br>
-ANALYZE<br>
-   ↓<br>
-MATCH<br>
-   ↓<br>
-IDENTIFY GAPS<br>
-   ↓<br>
-PREPARE<br>
-   ↓<br>
-TAILOR<br>
-   ↓<br>
-APPLY<br>
-   ↓<br>
-TRACK<br>
-   ↓<br>
-LEARN & IMPROVE<br>
+**Command:**
+```bash
+docker-compose up --build
+```
 
-## Key Features
+### 2. Backend Production Pipeline (`render.yaml`)
+The backend is configured for continuous deployment on **Render**. The pipeline defines:
+- A `jobblitz-backend` Web Service running Python.
+- A managed PostgreSQL instance (`jobblitz-db`).
+- Auto-provisioning of environment variables including DB connection strings.
 
-### AI Job Intelligence
-Extracts skills, responsibilities, experience requirements, keywords and
-expectations from job descriptions.
+### 3. Mobile Build Pipeline (`eas.json`)
+The mobile application is integrated with **Expo Application Services (EAS)** for cloud building.
+- Build Android APKs via the configured preview profile.
+**Command:**
+```bash
+cd mobile && npm run build:apk
+```
 
-### Match & Readiness Engine
-Produces an explainable fit score and application-readiness score.
+## 🛠 Features in Detail
 
-### Skill Gap Engine
-Identifies missing or weak skills and prioritizes them by importance.
+1. **AI Job Intelligence:** Extracts skills, responsibilities, and keywords from scraped job descriptions.
+2. **Match & Readiness Engine:** Produces an explainable fit score based on your profile.
+3. **Skill Gap Engine:** Identifies missing or weak skills.
+4. **Resume & Cover Letter Tailoring:** Adapts documents preserving factual candidate information.
+5. **Interview Copilot:** Generates mock interviews and questions specific to the role.
+6. **Application Tracker:** Centralized workspace for tracking deadlines, follow-ups, and outcomes.
 
-### AI Preparation Roadmap
-Creates an actionable preparation plan based on the specific role.
-
-### Resume & Cover Letter Tailoring
-Adapts application documents to the selected role while preserving factual
-candidate information.
-
-### Interview Copilot
-Generates role-specific interview questions and conducts mock interviews.
-
-### Application Workspace
-Combines job information, preparation tasks, documents, interview preparation
-and application status in one workspace.
-
-### Application Tracker
-Tracks applications, deadlines, follow-ups, interviews and outcomes.
-
-### Phone-First AI
-Uses camera, voice and on-device AI capabilities for rapid interaction.
-
-### Office Kit Workflow
-Connects the phone and laptop for document transfer, clipboard operations,
-editing and deeper work.
-
-### Feedback Loop
-Application outcomes and activity are converted into insights that improve
-future recommendations.
-
-## Technology
-
-Frontend:
-- React Native
-- Expo
-- TypeScript
-
-Backend:
-- FastAPI
-- PostgreSQL
-- Redis
-- Background workers
-
-AI:
-- Local / open-source model where practical
-- LLM-powered orchestration
-- RAG for contextual company and role intelligence
-- Document intelligence
-
-Infrastructure:
-- Docker
-- REST APIs
-- WebSockets where required
-- Cloud deployment
-
-## Licence
-Licenced under MIT.
+## 📜 License
+Licensed under the **MIT License**. See the `LICENSE` file for more details.
