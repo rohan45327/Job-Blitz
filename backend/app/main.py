@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.core.database import engine, Base
 import app.models  # noqa: F401
-from app.api.routes import auth, users, jobs, applications, watchlist, ai, resumes, readiness, projects, analytics, office_kit, voice_ai
+from app.api.routes import auth, users, jobs, applications, watchlist, ai, resumes, readiness, projects, analytics, office_kit, voice_ai, voice
 
 # Create database tables if they do not exist (safely catch pre-existing Postgres enum type errors)
 try:
@@ -44,6 +44,7 @@ app.include_router(projects.router, prefix="/api/v1")
 app.include_router(analytics.router, prefix="/api/v1")
 app.include_router(office_kit.router, prefix="/api/v1")
 app.include_router(voice_ai.router, prefix="/api/v1")
+app.include_router(voice.router, prefix="/api/v1")
 
 
 import threading
