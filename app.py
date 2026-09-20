@@ -1,11 +1,16 @@
 import sys
 import os
+import spaces
 
 # Add backend source directory to python path
 sys.path.insert(0, os.path.abspath("backend"))
 
 import gradio as gr
 from app.main import app as fastapi_app
+
+@spaces.GPU
+def dummy_gpu():
+    pass
 
 # Create a minimal Gradio UI wrapper for health check / demo testing
 def api_status_check():
