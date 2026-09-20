@@ -8,11 +8,8 @@ sys.path.insert(0, os.path.abspath("backend"))
 import gradio as gr
 from app.main import app as fastapi_app
 
-@spaces.GPU
-def dummy_gpu():
-    pass
-
 # Create a minimal Gradio UI wrapper for health check / demo testing
+@spaces.GPU
 def api_status_check():
     return "🚀 JobBlitz FastAPI Backend is LIVE with Neon PostgreSQL & Open-Source AI Engine!"
 
