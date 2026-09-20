@@ -21,7 +21,9 @@ class Settings(BaseSettings):
     JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 30
 
     # AI
-    AI_PROVIDER: Literal["gemini", "openai"] = "gemini"
+    AI_PROVIDER: Literal["gemini", "openai", "open_source", "llama"] = "open_source"
+    OPENSOURCE_MODEL_NAME: str = "llama-3.1-8b-instruct"
+    OPENSOURCE_API_BASE: str = "https://api.groq.com/openai/v1"
     GEMINI_API_KEY: str = ""
     OPENAI_API_KEY: str = ""
 

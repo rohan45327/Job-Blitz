@@ -17,6 +17,12 @@ import { ThunderLoader } from '../../components/common/ThunderLoader';
 import { cleanText } from '../../utils/cleanText';
 import { RootStackParams } from '../../../App';
 
+// iQOO Hackathon Components
+import { OfficeKitBridge } from '../../components/bridge/OfficeKitBridge';
+import { VoiceInterviewModal } from '../../components/voice/VoiceInterviewModal';
+import { CameraScannerModal } from '../../components/camera/CameraScannerModal';
+import { DemoPitchModeModal } from '../../components/demo/DemoPitchModeModal';
+
 type Nav = NativeStackNavigationProp<RootStackParams>;
 
 export function HomeScreen() {
@@ -29,6 +35,11 @@ export function HomeScreen() {
   const [page, setPage] = useState(1);
   const [activeTab, setActiveTab] = useState<'all' | 'high_match'>('all');
   const [selectedHighMatch, setSelectedHighMatch] = useState<MatchedJobOut | null>(null);
+
+  // iQOO Hackathon Features State
+  const [showCameraScanner, setShowCameraScanner] = useState(false);
+  const [showVoiceModal, setShowVoiceModal] = useState(false);
+  const [showPitchModal, setShowPitchModal] = useState(false);
 
   const { data, isLoading, refetch, isFetching } = useQuery({
     queryKey: ['job-feed', filters, page],
@@ -78,6 +89,24 @@ export function HomeScreen() {
         </View>
 
         <View style={styles.headerActions}>
+          {/* Hackathon Jury Pitch Mode Button */}
+          <TouchableOpacity
+            style={[styles.iconBtn, { backgroundColor: 'rgba(255, 184, 0, 0.15)', borderColor: colors.primary }]}
+            onPress={() => setShowPitchModal(true)}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="trophy-outline" size={16} color={colors.primary} />
+          </TouchableOpacity>
+
+          {/* Camera Scanner Button */}
+          <TouchableOpacity
+            style={[styles.iconBtn, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}
+            onPress={() => setShowCameraScanner(true)}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="camera-outline" size={16} color={colors.textPrimary} />
+          </TouchableOpacity>
+
           {/* Theme Toggle */}
           <TouchableOpacity
             style={[styles.iconBtn, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}
@@ -102,6 +131,14 @@ export function HomeScreen() {
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* iQOO Office Kit Phone-Laptop Bridge Bar */}
+      <OfficeKitBridge
+        onPasteJobUrl={(url) => {
+          Alert.alert('⚡ Office Kit Sync', `Imported job posting: ${url}`);
+        }}
+        onOpenPitchMode={() => setShowPitchModal(true)}
+      />
 
       {/* Navigation Tabs */}
       <View style={[styles.tabBar, { borderBottomColor: colors.border }]}>
@@ -271,6 +308,36 @@ export function HomeScreen() {
           setShowFilters(false);
         }}
         onClose={() => setShowFilters(false)}
+      />
+
+      {/* iQOO Hackathon Camera Scanner Modal */}
+      <CameraScannerModal
+        visible={showCameraScanner}
+        onClose={() => setShowCameraScanner(false)}
+        onJobDetected={(job) => {
+          Alert.alert('Job Imported', `Scanned job ${job.title} added to feed.`);
+        }}
+      />
+
+      {/* iQOO Hackathon Voice Interview Modal */}
+      <VoiceInterviewModal
+        visible={showVoiceModal}
+        onClose={() => setShowVoiceModal(false)}
+      />
+
+      {/* iQOO Hackathon Demo & Jury Pitch Mode Modal */}
+      <DemoPitchModeModal
+        visible={showPitchModal}
+        onClose={() => setShowPitchModal(false)}
+        onLaunchOfficeKit={() => setShowPitchModal(false)}
+        onLaunchVoice={() => {
+          setShowPitchModal(false);
+          setShowVoiceModal(true);
+        }}
+        onLaunchCamera={() => {
+          setShowPitchModal(false);
+          setShowCameraScanner(true);
+        }}
       />
     </View>
   );

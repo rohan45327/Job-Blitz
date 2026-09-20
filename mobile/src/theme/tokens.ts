@@ -2,50 +2,53 @@
 // Twitter/X-inspired minimalist: pure black (dark) ↔ pure white (light)
 
 export const Colors = {
-  // Brand — X/Twitter Blue
-  primary: '#1D9BF0',
-  primaryLight: '#60B8F5',
-  primaryDark: '#1678C1',
-  accent: '#1D9BF0',
-  accentDark: '#1678C1',
+  // Brand — iQOO Cyber Gold & Deep Purple
+  primary: '#FFB800',
+  primaryLight: '#FFC837',
+  primaryDark: '#D49800',
+  accent: '#8B5CF6',
+  accentDark: '#7C3AED',
+  iqooGold: '#FFB800',
+  iqooYellow: '#F5C518',
+  cyberBlue: '#00E5FF',
 
   // Status
   success: '#00BA7C',
   warning: '#FFB938',
   danger: '#F4212E',
-  info: '#1D9BF0',
+  info: '#00E5FF',
 
-  // Neutrals — DARK mode (major black, minor white)
-  background: '#000000',
-  surface: '#0A0A0A',
-  surfaceElevated: '#111111',
-  surfaceHighlight: '#1A1A1A',
-  border: '#2F3336',
-  borderLight: '#3E4144',
+  // Neutrals — DARK mode (major cyber black, minor gold)
+  background: '#08080A',
+  surface: '#111116',
+  surfaceElevated: '#1A1A22',
+  surfaceHighlight: '#262632',
+  border: '#2A2A38',
+  borderLight: '#3D3D52',
 
   // Text — dark mode
-  textPrimary: '#E7E9EA',
-  textSecondary: '#71767B',
-  textMuted: '#3E4144',
-  textInverse: '#000000',
+  textPrimary: '#F3F4F6',
+  textSecondary: '#9CA3AF',
+  textMuted: '#6B7280',
+  textInverse: '#08080A',
 
-  // Overlays
-  overlay: 'rgba(0, 0, 0, 0.9)',
-  glass: 'rgba(255, 255, 255, 0.04)',
-  glassBorder: 'rgba(255, 255, 255, 0.08)',
+  // Overlays & Glass
+  overlay: 'rgba(8, 8, 10, 0.92)',
+  glass: 'rgba(255, 184, 0, 0.05)',
+  glassBorder: 'rgba(255, 184, 0, 0.2)',
 } as const;
 
 export const LightColors = {
-  primary: '#1D9BF0',
-  primaryLight: '#1678C1',
-  primaryDark: '#0F6AB0',
-  accent: '#1D9BF0',
-  accentDark: '#0F6AB0',
+  primary: '#8B5CF6',
+  primaryLight: '#7C3AED',
+  primaryDark: '#6D28D9',
+  accent: '#8B5CF6',
+  accentDark: '#6D28D9',
 
   success: '#00BA7C',
   warning: '#D97706',
   danger: '#DC2626',
-  info: '#1D9BF0',
+  info: '#8B5CF6',
 
   // LIGHT mode (major white, minor black)
   background: '#FFFFFF',

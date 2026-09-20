@@ -19,7 +19,9 @@ class AIService:
     def generate_cover_letter(self, user: User, job: Job, tone: str = "professional") -> str:
         prompt = self._build_cover_letter_prompt(user, job, tone)
         try:
-            if self.provider == "gemini":
+            if self.provider in ["open_source", "llama"]:
+                return self._call_open_source_model(prompt)
+            elif self.provider == "gemini":
                 return self._call_gemini(prompt)
             return self._call_openai(prompt)
         except Exception as e:
@@ -35,7 +37,9 @@ class AIService:
             f"Breakdown: {breakdown}"
         )
         try:
-            if self.provider == "gemini":
+            if self.provider in ["open_source", "llama"]:
+                return self._call_open_source_model(prompt)
+            elif self.provider == "gemini":
                 return self._call_gemini(prompt)
             return self._call_openai(prompt)
         except Exception as e:
@@ -61,6 +65,25 @@ class AIService:
             "Write a concise, compelling cover letter (3 paragraphs). "
             "Do NOT include a date or address header. Start directly with 'Dear Hiring Team,'."
         )
+
+    def _call_open_source_model(self, prompt: str) -> str:
+        """Call Open-Source Llama 3 / Mistral model endpoint."""
+        try:
+            from openai import OpenAI  # type: ignore
+            # Connect to Open-Source Model API (Groq/Ollama/vLLM/DeepSeek endpoint)
+            client = OpenAI(
+                base_url=settings.OPENSOURCE_API_BASE,
+                api_key=settings.OPENAI_API_KEY or "open-source-local-key"
+            )
+            response = client.chat.completions.create(
+                model=settings.OPENSOURCE_MODEL_NAME,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.7,
+            )
+            return response.choices[0].message.content.strip()
+        except Exception as err:
+            logger.warning(f"Open-source model call failed, trying Gemini fallback: {err}")
+            return self._call_gemini(prompt)
 
     def _call_gemini(self, prompt: str) -> str:
         import google.generativeai as genai  # type: ignore

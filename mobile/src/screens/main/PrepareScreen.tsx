@@ -10,6 +10,7 @@ import { Typography, Spacing, Radius } from '../../theme/tokens';
 import { useTheme } from '../../theme/ThemeContext';
 import { CompanyBriefModal } from '../../components/prep/CompanyBriefModal';
 import { ResumeDefenseModal } from '../../components/prep/ResumeDefenseModal';
+import { VoiceInterviewModal } from '../../components/voice/VoiceInterviewModal';
 import { cleanText } from '../../utils/cleanText';
 
 interface CompanyGroup {
@@ -33,6 +34,7 @@ export function PrepareScreen() {
 
   const [showBriefModal, setShowBriefModal] = useState(false);
   const [showDefenseModal, setShowDefenseModal] = useState(false);
+  const [showVoiceModal, setShowVoiceModal] = useState(false);
 
   // Fetch job feed for selector options (page_size 50 for broad choice)
   const { data: feedData } = useQuery({
@@ -207,6 +209,19 @@ export function PrepareScreen() {
               </View>
               <Text style={[styles.toolTitle, { color: colors.textPrimary }]}>Resume Defense</Text>
               <Text style={[styles.toolSub, { color: colors.textSecondary }]}>Practice tough project deep-dive Qs</Text>
+            </TouchableOpacity>
+
+            {/* Tool 3: Voice STAR Coach */}
+            <TouchableOpacity
+              style={[styles.toolCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
+              onPress={() => setShowVoiceModal(true)}
+              activeOpacity={0.8}
+            >
+              <View style={[styles.toolIconBox, { backgroundColor: 'rgba(255, 184, 0, 0.18)' }]}>
+                <Ionicons name="mic" size={20} color="#FFB800" />
+              </View>
+              <Text style={[styles.toolTitle, { color: colors.textPrimary }]}>Voice STAR Coach</Text>
+              <Text style={[styles.toolSub, { color: colors.textSecondary }]}>Speak answers & get instant AI audio feedback</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -391,6 +406,10 @@ export function PrepareScreen() {
             visible={showDefenseModal}
             jobId={targetJobId}
             onClose={() => setShowDefenseModal(false)}
+          />
+          <VoiceInterviewModal
+            visible={showVoiceModal}
+            onClose={() => setShowVoiceModal(false)}
           />
         </>
       )}
