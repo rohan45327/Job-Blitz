@@ -36,3 +36,6 @@ app = gr.Interface(
     title="JobBlitz AI Co-Pilot Backend",
     description="FastAPI Backend running stealthily inside a ZeroGPU Gradio Space! API is mounted at /api/api/v1/"
 )
+
+if __name__ == "__main__":
+    app.launch()
