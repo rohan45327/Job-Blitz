@@ -1,3 +1,14 @@
+---
+title: JobBlitz
+emoji: 🚀
+colorFrom: blue
+colorTo: purple
+sdk: gradio
+sdk_version: "4.44.1"
+app_file: app.py
+pinned: false
+---
+
 # Job Blitz 🚀
 
 Job Blitz is an AI-powered Job Application Productivity Agent that reduces the repetitive work involved in finding, understanding, preparing for, applying to, and tracking job opportunities.
