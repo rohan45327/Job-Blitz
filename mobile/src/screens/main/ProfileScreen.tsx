@@ -10,6 +10,7 @@ import { useAuthStore } from '../../store/authStore';
 import { api, ResumeOut, ProjectOut } from '../../api/client';
 import { Typography, Spacing, Radius } from '../../theme/tokens';
 import { useTheme } from '../../theme/ThemeContext';
+import { OfficeKitBridge } from '../../components/bridge/OfficeKitBridge';
 
 const WORK_TYPE_OPTIONS = ['remote', 'hybrid', 'onsite'];
 const EXP_OPTIONS = ['entry', 'mid', 'senior', 'lead', 'executive'];
@@ -231,6 +232,8 @@ export function ProfileScreen() {
           </TouchableOpacity>
         </View>
 
+
+
         {/* Resumes Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeaderRow}>
@@ -396,9 +399,17 @@ export function ProfileScreen() {
             )}
           </View>
 
-          <FieldInput label="Min. Salary ($)" value={form.salary_expectation_min} field="salary_expectation_min" editing={editing} keyboardType="numeric" onChangeText={handleFieldChange} />
-          <FieldInput label="Max. Salary ($)" value={form.salary_expectation_max} field="salary_expectation_max" editing={editing} keyboardType="numeric" onChangeText={handleFieldChange} />
+          <FieldInput label="Min. Salary (₹)" value={form.salary_expectation_min} field="salary_expectation_min" editing={editing} keyboardType="numeric" onChangeText={handleFieldChange} />
+          <FieldInput label="Max. Salary (₹)" value={form.salary_expectation_max} field="salary_expectation_max" editing={editing} keyboardType="numeric" onChangeText={handleFieldChange} />
         </View>
+
+        {/* Office Kit Phone-Laptop Bridge Bar */}
+        <OfficeKitBridge
+          onPasteJobUrl={(url) => {
+            Alert.alert('⚡ Office Kit Sync', `Imported job posting: ${url}`);
+          }}
+          onOpenPitchMode={() => {}}
+        />
 
         {/* Sign out */}
         <TouchableOpacity

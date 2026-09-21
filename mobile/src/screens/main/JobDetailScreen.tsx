@@ -49,7 +49,9 @@ export function JobDetailScreen({ route, navigation }: Props) {
   }
 
   const salaryText = job.salary_min && job.salary_max
-    ? `$${Math.round(job.salary_min / 1000)}k – $${Math.round(job.salary_max / 1000)}k / yr`
+    ? job.salary_currency === 'INR'
+      ? `₹${Math.round(job.salary_min / 100000)}L – ₹${Math.round(job.salary_max / 100000)}L / yr`
+      : `$${Math.round(job.salary_min / 1000)}k – $${Math.round(job.salary_max / 1000)}k / yr`
     : 'Salary not disclosed';
 
   return (
@@ -257,10 +259,13 @@ const styles = StyleSheet.create({
   skillText: { fontSize: Typography.sm, fontWeight: '600' },
   description: { fontSize: Typography.base, lineHeight: Typography.base * 1.7 },
   bottomBar: {
-    // Use position: relative and let the layout flow naturally instead of absolute
-    // This avoids overlapping the home indicator on iPhones and notches on Android
-    paddingBottom: 80, // Extra padding for safe area + bottom bar height
-    marginTop: Spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+    paddingHorizontal: Spacing['2xl'],
+    paddingTop: Spacing.md,
+    paddingBottom: 40,
+    borderTopWidth: 1,
   },
   primaryBtn: {
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',

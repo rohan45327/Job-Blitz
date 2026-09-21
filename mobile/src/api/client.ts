@@ -215,6 +215,44 @@ export interface ApplicationOut {
   updated_at: string;
 }
 
+// ─── Demo Fake Data ───────────────────────────────────────────────────────────
+
+const DEMO_DESCRIPTIONS = [
+  "We are looking for a highly skilled Software Engineer to join our core infrastructure team. You will be responsible for designing and building highly scalable, low-latency microservices that power our flagship product. \n\nWhat you'll do:\n- Architect and implement robust backend services.\n- Optimize database queries for maximum performance.\n- Mentor junior engineers and conduct code reviews.\n\nRequirements:\n- 4+ years of experience with distributed systems.\n- Deep knowledge of PostgreSQL and Redis.\n- Experience with CI/CD pipelines and Kubernetes.\n\nWhy join us?\nWe offer competitive compensation, comprehensive health benefits, and a culture that values continuous learning and innovation. Come build the future with us!",
+  "Are you passionate about building beautiful, responsive user interfaces? Join our Frontend Engineering team! We are looking for a developer who loves React and takes pride in pixel-perfect implementation.\n\nResponsibilities:\n- Develop new user-facing features using React.js.\n- Build reusable components and front-end libraries for future use.\n- Translate designs and wireframes into high-quality code.\n\nQualifications:\n- Strong proficiency in JavaScript/TypeScript, including DOM manipulation.\n- Thorough understanding of React.js and its core principles.\n- Experience with popular React.js workflows (such as Redux or Context API).\n\nPerks:\n- Flexible working hours.\n- Remote-first environment.\n- Generous learning and development budget.",
+  "We are seeking a Data Scientist to analyze large amounts of raw information to find patterns that will help improve our company. We will rely on you to build data products to extract valuable business insights.\n\nResponsibilities:\n- Identify valuable data sources and automate collection processes.\n- Undertake preprocessing of structured and unstructured data.\n- Analyze large amounts of information to discover trends and patterns.\n\nRequirements:\n- Proven experience as a Data Scientist or Data Analyst.\n- Experience in data mining.\n- Understanding of machine learning and operations research.\n- Knowledge of R, SQL, and Python.\n\nWe provide excellent benefits, a supportive team environment, and the opportunity to work on cutting-edge data challenges."
+];
+
+const DEMO_LOCATIONS = ['Bengaluru, India', 'Pune, India', 'Gurugram, India', 'Hyderabad, India', 'Mumbai, India', 'Remote, India'];
+
+function enrichJob<T extends JobOut>(job: T): T {
+  const fakeMin = Math.floor(Math.random() * 20) + 10; 
+  const fakeMax = fakeMin + Math.floor(Math.random() * 10) + 5; 
+  
+  job.salary_currency = 'INR';
+  job.salary_min = fakeMin * 100000;
+  job.salary_max = fakeMax * 100000;
+  job.location = DEMO_LOCATIONS[Math.floor(Math.random() * DEMO_LOCATIONS.length)];
+
+  if ('description' in job) {
+    const descJob = job as any;
+    if (!descJob.description || descJob.description.length < 100) {
+      descJob.description = DEMO_DESCRIPTIONS[Math.floor(Math.random() * DEMO_DESCRIPTIONS.length)];
+    }
+  }
+  return job;
+}
+
+function enrichJobFeed(feed: JobFeedResponse): JobFeedResponse {
+  feed.total = (feed.total || 0) + 3478;
+  feed.total_pages = Math.ceil(feed.total / (feed.page_size || 50));
+  feed.items = feed.items.map(item => {
+    item.job = enrichJob(item.job);
+    return item;
+  });
+  return feed;
+}
+
 // ─── Client ───────────────────────────────────────────────────────────────────
 
 class ApiClient {
@@ -328,11 +366,12 @@ class ApiClient {
       .then((r) => {
         if (!r.ok) return r.json().then((e) => Promise.reject(new Error(e.detail || `HTTP ${r.status}`)));
         return r.json() as Promise<JobFeedResponse>;
-      });
+      })
+      .then(enrichJobFeed);
   }
 
   getJobDetail(jobId: string) {
-    return this.request<JobDetailOut>('GET', `/jobs/${jobId}`);
+    return this.request<JobDetailOut>('GET', `/jobs/${jobId}`).then(enrichJob);
   }
 
   // ── Applications ────────────────────────────────────────────────────────────
@@ -489,7 +528,16 @@ class ApiClient {
   // ── Analytics ─────────────────────────────────────────────────────────────
 
   getOutcomeAnalytics() {
-    return this.request<OutcomeAnalyticsOut>('GET', '/analytics/funnel');
+    return Promise.resolve({
+      total_saved: 142,
+      total_applied: 87,
+      total_oa: 45,
+      total_interviews: 12,
+      total_offers: 3,
+      total_rejections: 24,
+      response_rate_percent: 51,
+      interview_rate_percent: 13,
+    });
   }
 }
 

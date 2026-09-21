@@ -51,9 +51,9 @@ const SALARY_RANGES = [
   { label: 'Any', value: undefined },
   { label: '₹10L+', value: 1000000 },
   { label: '₹20L+', value: 2000000 },
-  { label: '$80k+', value: 80000 },
-  { label: '$100k+', value: 100000 },
-  { label: '$150k+', value: 150000 },
+  { label: '₹30L+', value: 3000000 },
+  { label: '₹40L+', value: 4000000 },
+  { label: '₹50L+', value: 5000000 },
 ];
 
 export function FilterSheet({ visible, current, onApply, onClose }: Props) {
@@ -64,22 +64,22 @@ export function FilterSheet({ visible, current, onApply, onClose }: Props) {
 
   const toggleCompany = (name: string) => {
     setLocal((f) => {
-      const prev = f.companies ?? [];
+      const prev = f?.companies ?? [];
       const next = prev.includes(name) ? prev.filter((c) => c !== name) : [...prev, name];
-      return { ...f, companies: next.length > 0 ? next : undefined };
+      return { ...(f || {}), companies: next.length > 0 ? next : undefined };
     });
   };
 
   const toggleWorkType = (wt: string) => {
     setLocal((f) => {
-      const prev = f.work_types ?? (f.work_type ? [f.work_type] : []);
+      const prev = f?.work_types ?? (f?.work_type ? [f.work_type] : []);
       const next = prev.includes(wt) ? prev.filter((c) => c !== wt) : [...prev, wt];
-      return { ...f, work_types: next.length > 0 ? next : undefined, work_type: undefined };
+      return { ...(f || {}), work_types: next.length > 0 ? next : undefined, work_type: undefined };
     });
   };
 
-  const selectedCompanies = local.companies ?? [];
-  const selectedWorkTypes = local.work_types ?? (local.work_type ? [local.work_type] : []);
+  const selectedCompanies = local?.companies ?? [];
+  const selectedWorkTypes = local?.work_types ?? (local?.work_type ? [local.work_type] : []);
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
@@ -177,16 +177,16 @@ export function FilterSheet({ visible, current, onApply, onClose }: Props) {
                   style={[
                     styles.chip,
                     { borderColor: colors.border, backgroundColor: colors.surfaceElevated },
-                    local.experience_level === opt && { borderColor: colors.primary, backgroundColor: colors.primary + '22' },
+                    local?.experience_level === opt && { borderColor: colors.primary, backgroundColor: colors.primary + '22' },
                   ]}
                   onPress={() =>
-                    setLocal((f) => ({ ...f, experience_level: f.experience_level === opt ? undefined : opt }))
+                    setLocal((f) => ({ ...(f || {}), experience_level: f?.experience_level === opt ? undefined : opt }))
                   }
                 >
                   <Text style={[
                     styles.chipText,
                     { color: colors.textSecondary },
-                    local.experience_level === opt && { color: colors.primary },
+                    local?.experience_level === opt && { color: colors.primary },
                   ]}>{opt}</Text>
                 </TouchableOpacity>
               ))}
@@ -203,14 +203,14 @@ export function FilterSheet({ visible, current, onApply, onClose }: Props) {
                   style={[
                     styles.chip,
                     { borderColor: colors.border, backgroundColor: colors.surfaceElevated },
-                    local.salary_min === r.value && { borderColor: colors.primary, backgroundColor: colors.primary + '22' },
+                    local?.salary_min === r.value && { borderColor: colors.primary, backgroundColor: colors.primary + '22' },
                   ]}
-                  onPress={() => setLocal((f) => ({ ...f, salary_min: r.value }))}
+                  onPress={() => setLocal((f) => ({ ...(f || {}), salary_min: r.value }))}
                 >
                   <Text style={[
                     styles.chipText,
                     { color: colors.textSecondary },
-                    local.salary_min === r.value && { color: colors.primary },
+                    local?.salary_min === r.value && { color: colors.primary },
                   ]}>{r.label}</Text>
                 </TouchableOpacity>
               ))}

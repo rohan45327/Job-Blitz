@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, Alert, Animated, Modal, ScrollView
 } from 'react-native';
 import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { Colors, Spacing, Radius, Typography } from '../../theme/tokens';
+import { Spacing, Radius, Typography } from '../../theme/tokens';
+import { useTheme } from '../../theme/ThemeContext';
+import Constants from 'expo-constants';
 
 interface OfficeKitBridgeProps {
   onPasteJobUrl?: (url: string) => void;
@@ -11,33 +13,74 @@ interface OfficeKitBridgeProps {
 }
 
 export function OfficeKitBridge({ onPasteJobUrl, onOpenPitchMode }: OfficeKitBridgeProps) {
-  const [isPaired, setIsPaired] = useState<boolean>(true);
+  const [isPaired, setIsPaired] = useState<boolean>(false);
   const [syncedClipboard, setSyncedClipboard] = useState<string | null>(null);
   const [showBridgeDetails, setShowBridgeDetails] = useState<boolean>(false);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const { colors } = useTheme();
+  
+  const wsRef = useRef<WebSocket | null>(null);
 
-  // Simulate laptop-to-phone clipboard sync
+  useEffect(() => {
+    // Determine backend WebSocket URL based on Expo Constants (similar to API client)
+    const apiBase = Constants.expoConfig?.extra?.apiUrl || process.env.EXPO_PUBLIC_API_URL || 'https://rohan45327-jobblitz.hf.space/api/api/v1';
+    // Convert http/https to ws/wss
+    const wsUrl = apiBase.replace(/^http/, 'ws') + '/office-kit/ws';
+
+    const connectWs = () => {
+      const ws = new WebSocket(wsUrl);
+      
+      ws.onopen = () => {
+        setIsPaired(true);
+      };
+      
+      ws.onmessage = (e) => {
+        try {
+          const data = JSON.parse(e.data);
+          if (data.type === 'clipboard' && data.content) {
+            setSyncedClipboard(data.content);
+            Alert.alert(
+              '⚡ Office Kit Clipboard Synced!',
+              `Received Job Link from Laptop:\n\n${data.content}`,
+              [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                  text: 'Analyze Job Now',
+                  onPress: () => {
+                    if (onPasteJobUrl) onPasteJobUrl(data.content);
+                    setShowBridgeDetails(false);
+                  },
+                },
+              ]
+            );
+          }
+        } catch (err) {
+          console.log('WS Message parsing error:', err);
+        }
+      };
+
+      ws.onclose = () => setIsPaired(false);
+      wsRef.current = ws;
+    };
+
+    connectWs();
+
+    return () => {
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
+    };
+  }, []);
+
   const handleFetchLaptopClipboard = () => {
-    setIsSyncing(true);
-    setTimeout(() => {
-      setIsSyncing(false);
-      const mockLaptopJobUrl = 'https://careers.google.com/jobs/results/148920-senior-software-engineer-cloud';
-      setSyncedClipboard(mockLaptopJobUrl);
-      Alert.alert(
-        '⚡ Office Kit Clipboard Synced!',
-        `Received Job Link from Laptop:\n\n${mockLaptopJobUrl}`,
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Analyze Job Now',
-            onPress: () => {
-              if (onPasteJobUrl) onPasteJobUrl(mockLaptopJobUrl);
-              setShowBridgeDetails(false);
-            },
-          },
-        ]
-      );
-    }, 800);
+    if (!isPaired) {
+      Alert.alert('Not Connected', 'Ensure your laptop is connected to the Office Kit Mesh.');
+      return;
+    }
+    // We send a ping to the laptop to request clipboard, but if using REST API to push,
+    // we can just wait for the websocket message.
+    Alert.alert('Waiting for Laptop', 'Copy a URL on your laptop and hit the OfficeKit shortcut!');
   };
 
   const handleSendTailoredResumeToLaptop = () => {
@@ -55,24 +98,24 @@ export function OfficeKitBridge({ onPasteJobUrl, onOpenPitchMode }: OfficeKitBri
     <View style={styles.container}>
       {/* Top Banner Bar */}
       <TouchableOpacity
-        style={styles.bridgeBar}
+        style={[styles.bridgeBar, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}
         activeOpacity={0.8}
         onPress={() => setShowBridgeDetails(true)}
       >
         <View style={styles.leftSection}>
           <View style={styles.statusDotActive} />
-          <Ionicons name="laptop-outline" size={16} color={Colors.iqooGold} style={styles.icon} />
-          <Ionicons name="swap-horizontal" size={14} color={Colors.textSecondary} style={styles.icon} />
-          <Ionicons name="phone-portrait-outline" size={16} color={Colors.iqooGold} style={styles.icon} />
-          <Text style={styles.bridgeText}>Office Kit Bridge</Text>
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>LIVE</Text>
+          <Ionicons name="laptop-outline" size={16} color={colors.primary} style={styles.icon} />
+          <Ionicons name="swap-horizontal" size={14} color={colors.textSecondary} style={styles.icon} />
+          <Ionicons name="phone-portrait-outline" size={16} color={colors.primary} style={styles.icon} />
+          <Text style={[styles.bridgeText, { color: colors.textPrimary }]}>Office Kit Bridge</Text>
+          <View style={[styles.badge, { backgroundColor: colors.primary + '20' }]}>
+            <Text style={[styles.badgeText, { color: colors.primary }]}>LIVE</Text>
           </View>
         </View>
 
         <View style={styles.rightSection}>
-          <TouchableOpacity style={styles.quickSyncBtn} onPress={handleFetchLaptopClipboard}>
-            <Feather name="clipboard" size={13} color={Colors.textInverse} />
+          <TouchableOpacity style={[styles.quickSyncBtn, { backgroundColor: colors.primary }]} onPress={handleFetchLaptopClipboard}>
+            <Feather name="clipboard" size={13} color="#FFFFFF" />
             <Text style={styles.quickSyncText}>Sync Laptop</Text>
           </TouchableOpacity>
         </View>
@@ -86,82 +129,82 @@ export function OfficeKitBridge({ onPasteJobUrl, onOpenPitchMode }: OfficeKitBri
         onRequestClose={() => setShowBridgeDetails(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
+          <View style={[styles.modalContent, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
               <View style={styles.modalTitleRow}>
-                <Ionicons name="hardware-chip-outline" size={22} color={Colors.iqooGold} />
-                <Text style={styles.modalTitle}>iQOO Office Kit Bridge</Text>
+                <Ionicons name="hardware-chip-outline" size={22} color={colors.primary} />
+                <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Office Kit Bridge</Text>
               </View>
               <TouchableOpacity onPress={() => setShowBridgeDetails(false)} style={styles.closeBtn}>
-                <Feather name="x" size={20} color={Colors.textSecondary} />
+                <Feather name="x" size={20} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
 
             <ScrollView contentContainerStyle={styles.modalBody}>
               {/* Pairing Status Card */}
-              <View style={styles.statusCard}>
+              <View style={[styles.statusCard, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
                 <View style={styles.statusHeader}>
                   <View style={styles.deviceRow}>
-                    <Ionicons name="laptop" size={24} color={Colors.textPrimary} />
-                    <Feather name="wifi" size={18} color={Colors.success} style={{ marginHorizontal: Spacing.sm }} />
-                    <Ionicons name="phone-portrait" size={24} color={Colors.iqooGold} />
+                    <Ionicons name="laptop" size={24} color={colors.textPrimary} />
+                    <Feather name="wifi" size={18} color={colors.success} style={{ marginHorizontal: Spacing.sm }} />
+                    <Ionicons name="phone-portrait" size={24} color={colors.primary} />
                   </View>
                   <View style={styles.pairingTag}>
                     <Text style={styles.pairingTagText}>PITCH READY</Text>
                   </View>
                 </View>
 
-                <Text style={styles.statusDesc}>
-                  Connected to <Text style={{ color: Colors.iqooGold, fontWeight: '700' }}>iQOO Loaner Device #402</Text> via Snapdragon Low-Latency Office Kit Mesh.
+                <Text style={[styles.statusDesc, { color: colors.textSecondary }]}>
+                  Connected to <Text style={{ color: colors.primary, fontWeight: '700' }}>Loaner Device #402</Text> via Snapdragon Low-Latency Office Kit Mesh.
                 </Text>
               </View>
 
               {/* Action Buttons Grid */}
-              <Text style={styles.sectionTitle}>Bridge Workflows</Text>
+              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Bridge Workflows</Text>
 
-              <TouchableOpacity style={styles.actionCard} onPress={handleFetchLaptopClipboard}>
-                <View style={[styles.actionIcon, { backgroundColor: 'rgba(255, 184, 0, 0.15)' }]}>
-                  <Feather name="copy" size={20} color={Colors.iqooGold} />
+              <TouchableOpacity style={[styles.actionCard, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]} onPress={handleFetchLaptopClipboard}>
+                <View style={[styles.actionIcon, { backgroundColor: colors.primary + '15' }]}>
+                  <Feather name="copy" size={20} color={colors.primary} />
                 </View>
                 <View style={styles.actionInfo}>
-                  <Text style={styles.actionTitle}>Laptop ➔ Phone Clipboard</Text>
-                  <Text style={styles.actionSub}>Auto-import copied job posting URLs directly into JobBlitz match engine.</Text>
+                  <Text style={[styles.actionTitle, { color: colors.textPrimary }]}>Laptop ➔ Phone Clipboard</Text>
+                  <Text style={[styles.actionSub, { color: colors.textSecondary }]}>Auto-import copied job posting URLs directly into JobBlitz match engine.</Text>
                 </View>
-                <Feather name="chevron-right" size={18} color={Colors.textSecondary} />
+                <Feather name="chevron-right" size={18} color={colors.textSecondary} />
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.actionCard} onPress={handleSendTailoredResumeToLaptop}>
+              <TouchableOpacity style={[styles.actionCard, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]} onPress={handleSendTailoredResumeToLaptop}>
                 <View style={[styles.actionIcon, { backgroundColor: 'rgba(0, 229, 255, 0.15)' }]}>
-                  <MaterialCommunityIcons name="file-send-outline" size={20} color={Colors.cyberBlue} />
+                  <MaterialCommunityIcons name="file-send-outline" size={20} color="#00E5FF" />
                 </View>
                 <View style={styles.actionInfo}>
-                  <Text style={styles.actionTitle}>Phone ➔ Laptop File Transfer</Text>
-                  <Text style={styles.actionSub}>Push tailored PDF resume & STAR defense prep sheet straight to desktop.</Text>
+                  <Text style={[styles.actionTitle, { color: colors.textPrimary }]}>Phone ➔ Laptop File Transfer</Text>
+                  <Text style={[styles.actionSub, { color: colors.textSecondary }]}>Push tailored PDF resume & STAR defense prep sheet straight to desktop.</Text>
                 </View>
-                <Feather name="chevron-right" size={18} color={Colors.textSecondary} />
+                <Feather name="chevron-right" size={18} color={colors.textSecondary} />
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.actionCard}
+                style={[styles.actionCard, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}
                 onPress={() => {
                   setShowBridgeDetails(false);
                   if (onOpenPitchMode) onOpenPitchMode();
                 }}
               >
                 <View style={[styles.actionIcon, { backgroundColor: 'rgba(0, 186, 124, 0.15)' }]}>
-                  <Feather name="tv" size={20} color={Colors.success} />
+                  <Feather name="tv" size={20} color={colors.success} />
                 </View>
                 <View style={styles.actionInfo}>
-                  <Text style={styles.actionTitle}>Screen Mirror & Jury Pitch Mode</Text>
-                  <Text style={styles.actionSub}>Launch 3-Minute Hackathon Demo Dashboard on paired laptop monitor.</Text>
+                  <Text style={[styles.actionTitle, { color: colors.textPrimary }]}>Screen Mirror & Jury Pitch Mode</Text>
+                  <Text style={[styles.actionSub, { color: colors.textSecondary }]}>Launch 3-Minute Pitch Demo Dashboard on paired laptop monitor.</Text>
                 </View>
-                <Feather name="chevron-right" size={18} color={Colors.textSecondary} />
+                <Feather name="chevron-right" size={18} color={colors.textSecondary} />
               </TouchableOpacity>
 
               {/* Telemetry Indicator */}
-              <View style={styles.telemetryBox}>
-                <Feather name="shield" size={14} color={Colors.iqooGold} />
-                <Text style={styles.telemetryText}>
+              <View style={[styles.telemetryBox, { borderColor: colors.border }]}>
+                <Feather name="shield" size={14} color={colors.primary} />
+                <Text style={[styles.telemetryText, { color: colors.primary }]}>
                   HackTracker Active: Capturing dual-device bridge interactions & Snapdragon NPU speed.
                 </Text>
               </View>
@@ -218,7 +261,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.sm,
   },
   badgeText: {
-    color: Colors.iqooGold,
+    color: Colors.accentGold,
     fontSize: 9,
     fontWeight: '800',
   },
@@ -226,7 +269,7 @@ const styles = StyleSheet.create({
   quickSyncBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.iqooGold,
+    backgroundColor: Colors.accentGold,
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: Radius.md,
@@ -360,7 +403,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
   },
   telemetryText: {
-    color: Colors.iqooGold,
+    color: Colors.accentGold,
     fontSize: Typography.xs,
     marginLeft: Spacing.xs,
     flex: 1,

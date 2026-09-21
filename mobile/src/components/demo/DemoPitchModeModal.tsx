@@ -36,9 +36,9 @@ export function DemoPitchModeModal({
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.titleRow}>
-              <Ionicons name="trophy" size={26} color={Colors.iqooGold} />
+              <Ionicons name="trophy" size={26} color={Colors.accentGold} />
               <View style={{ marginLeft: Spacing.xs }}>
-                <Text style={styles.headerTitle}>iQOO Grand Finale Pitch Mode</Text>
+                <Text style={styles.headerTitle}>Grand Finale Pitch Mode</Text>
                 <Text style={styles.headerSub}>3 to 5 Min Live Jury Demonstration Dashboard</Text>
               </View>
             </View>
@@ -49,7 +49,7 @@ export function DemoPitchModeModal({
 
           <ScrollView contentContainerStyle={styles.content}>
             {/* Scoring Breakdown Matrix */}
-            <Text style={styles.sectionTitle}>iQOO Hackathon Scoring Breakdown (100%)</Text>
+            <Text style={styles.sectionTitle}>Performance Scoring Breakdown (100%)</Text>
 
             <View style={styles.scoreMatrix}>
               <View style={styles.scoreRow}>
@@ -77,7 +77,7 @@ export function DemoPitchModeModal({
                   <Text style={styles.scoreLabel}>HackTracker · Creative Phone Use</Text>
                   <Text style={styles.scoreSub}>Camera OCR, Voice mic practice, Snapdragon NPU</Text>
                 </View>
-                <View style={[styles.weightBadge, { backgroundColor: Colors.iqooGold }]}>
+                <View style={[styles.weightBadge, { backgroundColor: Colors.accentGold }]}>
                   <Text style={[styles.weightText, { color: Colors.textInverse }]}>15%</Text>
                 </View>
               </View>
@@ -124,13 +124,13 @@ export function DemoPitchModeModal({
               }}
             >
               <View style={[styles.demoIcon, { backgroundColor: 'rgba(255, 184, 0, 0.15)' }]}>
-                <Ionicons name="laptop-outline" size={22} color={Colors.iqooGold} />
+                <Ionicons name="laptop-outline" size={22} color={Colors.accentGold} />
               </View>
               <View style={styles.demoDetails}>
                 <Text style={styles.demoTitle}>1. Demo Office Kit Bridge</Text>
                 <Text style={styles.demoSub}>Show laptop clipboard sync & file transfer to jury</Text>
               </View>
-              <Feather name="play-circle" size={20} color={Colors.iqooGold} />
+              <Feather name="play-circle" size={20} color={Colors.accentGold} />
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -179,9 +179,9 @@ export function DemoPitchModeModal({
             </TouchableOpacity>
 
             <View style={styles.footerNote}>
-              <Feather name="check-square" size={14} color={Colors.iqooGold} />
+              <Feather name="check-square" size={14} color={Colors.accentGold} />
               <Text style={styles.footerNoteText}>
-                Repo locked & ready for Top 10 Finale Pitch on iQOO device surface.
+                Repo locked & ready for Top 10 Finale Pitch presentation.
               </Text>
             </View>
           </ScrollView>
@@ -225,7 +225,7 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   headerSub: {
-    color: Colors.iqooGold,
+    color: Colors.accentGold,
     fontSize: Typography.xs,
     fontWeight: '700',
   },
@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
     marginLeft: Spacing.xs,
   },
   weightText: {
-    color: Colors.iqooGold,
+    color: Colors.accentGold,
     fontSize: 11,
     fontWeight: '900',
   },
@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.glassBorder,
   },
   footerNoteText: {
-    color: Colors.iqooGold,
+    color: Colors.accentGold,
     fontSize: Typography.xs,
     fontWeight: '700',
     marginLeft: Spacing.xs,

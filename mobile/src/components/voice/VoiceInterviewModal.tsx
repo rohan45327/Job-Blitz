@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView, Animated, ActivityIndicator, Alert
 } from 'react-native';
-import { Feather, Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { Feather, Ionicons } from '@expo/vector-icons';
+import { Audio } from 'expo-av';
 import { Colors, Spacing, Radius, Typography } from '../../theme/tokens';
 
 interface VoiceInterviewModalProps {
@@ -23,6 +24,9 @@ export function VoiceInterviewModal({
   const [transcribedText, setTranscribedText] = useState<string>('');
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
   const [analysisResult, setAnalysisResult] = useState<any>(null);
+  
+  // Real Expo AV Recording Object
+  const [recording, setRecording] = useState<Audio.Recording | null>(null);
 
   // Animated wave visualizer values
   const waveAnim1 = useRef(new Animated.Value(10)).current;
@@ -30,7 +34,7 @@ export function VoiceInterviewModal({
   const waveAnim3 = useRef(new Animated.Value(15)).current;
   const waveAnim4 = useRef(new Animated.Value(25)).current;
 
-  // Recording Timer
+  // Recording Timer & Animations
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (isRecording) {
@@ -65,36 +69,111 @@ export function VoiceInterviewModal({
     return () => clearInterval(interval);
   }, [isRecording]);
 
-  const handleStartRecording = () => {
-    setAnalysisResult(null);
-    setTranscribedText('');
-    setIsRecording(true);
+  // Clean up audio on unmount
+  useEffect(() => {
+    return () => {
+      if (recording) {
+        recording.stopAndUnloadAsync();
+      }
+    };
+  }, []);
+
+  const handleStartRecording = async () => {
+    try {
+      setAnalysisResult(null);
+      setTranscribedText('');
+      
+      // Request permissions
+      const permission = await Audio.requestPermissionsAsync();
+      if (permission.status !== 'granted') {
+        Alert.alert('Permission Denied', 'Microphone permissions are required to record audio.');
+        return;
+      }
+      
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: true,
+        playsInSilentModeIOS: true,
+      });
+
+      const { recording: newRecording } = await Audio.Recording.createAsync(
+        Audio.RecordingOptionsPresets.HIGH_QUALITY
+      );
+      
+      setRecording(newRecording);
+      setIsRecording(true);
+    } catch (err) {
+      console.error('Failed to start recording', err);
+      Alert.alert('Error', 'Failed to start recording.');
+    }
   };
 
-  const handleStopRecording = () => {
-    setIsRecording(false);
-    const mockSpeech = "In my last role, our API latency spiked to 4 seconds during sales spikes. I analyzed DB query logs, identified missing indexes on PostgreSQL, added compound indexes and Redis caching. This reduced P99 latency down to 120ms.";
-    setTranscribedText(mockSpeech);
+  const handleStopRecording = async () => {
+    if (!recording) return;
 
+    setIsRecording(false);
     setIsAnalyzing(true);
-    setTimeout(() => {
-      setIsAnalyzing(false);
+    
+    try {
+      await recording.stopAndUnloadAsync();
+      await Audio.setAudioModeAsync({ allowsRecordingIOS: false });
+      
+      const uri = recording.getURI();
+      setRecording(null);
+      
+      if (!uri) {
+        throw new Error("Recording failed to produce a valid file.");
+      }
+      
+      // Upload to Backend
+      const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://rohan45327-jobblitz.hf.space/api/api/v1';
+      
+      const formData = new FormData();
+      // @ts-ignore
+      formData.append('audio', {
+        uri: uri,
+        type: 'audio/m4a',
+        name: 'recording.m4a',
+      });
+
+      const response = await fetch(`${apiUrl}/voice/analyze`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.detail || 'Analysis failed. Please ensure the backend is running.');
+      }
+
+      setTranscribedText(result.transcription);
+      
       setAnalysisResult({
-        overallScore: 92,
+        overallScore: result.star_score,
         starBreakdown: {
-          situation: 'Strong (Identified 4s latency spike during traffic surge)',
-          task: 'Clear (Objective to reduce P99 latency)',
-          action: 'Excellent (Analyzed DB logs, added compound indexes & Redis cache)',
-          result: 'Quantified Impact (P99 down from 4000ms to 120ms)'
+          situation: result.feedback,
+          task: `Duration: ${result.duration_sec}s`,
+          action: 'Speech Recognition executed',
+          result: 'Audio analyzed by JobBlitz backend'
         },
         speechMetrics: {
-          wpm: 142,
-          confidence: 'High',
+          wpm: Math.round((result.transcription.split(' ').length / (result.duration_sec || 1)) * 60),
+          confidence: (result.confidence * 100).toFixed(0) + '%',
           fillerWords: 0,
         },
-        npuspeed: '8.4ms (Snapdragon NPU Local Audio Model)'
+        npuspeed: 'Cloud NLP API (Zero API Keys)'
       });
-    }, 1200);
+
+    } catch (err: any) {
+      console.error(err);
+      Alert.alert('Analysis Error', err.message);
+      setTranscribedText('');
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   return (
@@ -104,10 +183,10 @@ export function VoiceInterviewModal({
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.titleRow}>
-              <Ionicons name="mic-circle" size={26} color={Colors.iqooGold} />
+              <Ionicons name="mic-circle" size={26} color={Colors.accentGold} />
               <View style={{ marginLeft: Spacing.xs }}>
                 <Text style={styles.headerTitle}>Voice Interview Coach</Text>
-                <Text style={styles.headerSub}>Mic & On-Device AI Audio Scoring</Text>
+                <Text style={styles.headerSub}>Live Microphone & API Speech Scoring</Text>
               </View>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
@@ -121,7 +200,7 @@ export function VoiceInterviewModal({
               <View style={styles.tagRow}>
                 <Text style={styles.tagText}>{questionCategory}</Text>
                 <View style={styles.npuTag}>
-                  <Text style={styles.npuTagText}>Snapdragon NPU</Text>
+                  <Text style={styles.npuTagText}>LIVE AUDIO</Text>
                 </View>
               </View>
               <Text style={styles.questionText}>"{questionText}"</Text>
@@ -135,7 +214,7 @@ export function VoiceInterviewModal({
                     <Ionicons name="mic" size={32} color={Colors.textInverse} />
                   </TouchableOpacity>
                   <Text style={styles.micPrompt}>Tap Mic & Speak Your STAR Answer</Text>
-                  <Text style={styles.micHint}>Voice data processed locally with real-time speech analytics.</Text>
+                  <Text style={styles.micHint}>Voice is recorded via device mic and sent to the API.</Text>
                 </View>
               )}
 
@@ -155,7 +234,7 @@ export function VoiceInterviewModal({
                     ))}
                   </View>
 
-                  <Text style={styles.listeningText}>Listening to your response...</Text>
+                  <Text style={styles.listeningText}>Recording live audio...</Text>
 
                   <TouchableOpacity style={styles.stopBtn} onPress={handleStopRecording}>
                     <Ionicons name="square" size={20} color={Colors.textInverse} />
@@ -166,9 +245,9 @@ export function VoiceInterviewModal({
 
               {isAnalyzing && (
                 <View style={styles.analyzingBox}>
-                  <ActivityIndicator size="large" color={Colors.iqooGold} />
-                  <Text style={styles.analyzingText}>Evaluating Voice Audio & STAR Structure...</Text>
-                  <Text style={styles.npuNote}>Running on-device Snapdragon NPU Audio Inference</Text>
+                  <ActivityIndicator size="large" color={Colors.accentGold} />
+                  <Text style={styles.analyzingText}>Transcribing & Evaluating Voice Audio...</Text>
+                  <Text style={styles.npuNote}>Processing via JobBlitz Cloud</Text>
                 </View>
               )}
             </View>
@@ -190,16 +269,16 @@ export function VoiceInterviewModal({
                     <Text style={styles.scoreDenom}>/100</Text>
                   </View>
                   <View style={styles.scoreDetails}>
-                    <Text style={styles.scoreTitle}>Excellent Answer!</Text>
+                    <Text style={styles.scoreTitle}>Answer Analyzed!</Text>
                     <Text style={styles.scoreSub}>
                       Pacing: {analysisResult.speechMetrics.wpm} WPM · Confidence: {analysisResult.speechMetrics.confidence}
                     </Text>
-                    <Text style={styles.latencyText}>⚡ Inference latency: {analysisResult.npuspeed}</Text>
+                    <Text style={styles.latencyText}>⚡ Inference Mode: {analysisResult.npuspeed}</Text>
                   </View>
                 </View>
 
                 {/* STAR Breakdown */}
-                <Text style={styles.sectionHeading}>STAR Framework Evaluation</Text>
+                <Text style={styles.sectionHeading}>Feedback Evaluation</Text>
                 {Object.entries(analysisResult.starBreakdown).map(([key, val]: any) => (
                   <View key={key} style={styles.starRow}>
                     <View style={styles.starLetterBadge}>
@@ -213,7 +292,7 @@ export function VoiceInterviewModal({
                 ))}
 
                 <TouchableOpacity style={styles.retryBtn} onPress={handleStartRecording}>
-                  <Feather name="refresh-cw" size={16} color={Colors.iqooGold} />
+                  <Feather name="refresh-cw" size={16} color={Colors.accentGold} />
                   <Text style={styles.retryBtnText}>Practice Another Take</Text>
                 </TouchableOpacity>
               </View>
@@ -280,7 +359,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xs,
   },
   tagText: {
-    color: Colors.iqooGold,
+    color: Colors.accentGold,
     fontSize: 11,
     fontWeight: '800',
     textTransform: 'uppercase',
@@ -318,11 +397,11 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: Colors.iqooGold,
+    backgroundColor: Colors.accentGold,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Spacing.md,
-    shadowColor: Colors.iqooGold,
+    shadowColor: Colors.accentGold,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
     shadowRadius: 10,
@@ -369,7 +448,7 @@ const styles = StyleSheet.create({
   },
   waveBar: {
     width: 6,
-    backgroundColor: Colors.iqooGold,
+    backgroundColor: Colors.accentGold,
     borderRadius: 3,
     marginHorizontal: 4,
   },
@@ -403,7 +482,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.md,
   },
   npuNote: {
-    color: Colors.iqooGold,
+    color: Colors.accentGold,
     fontSize: Typography.xs,
     marginTop: 4,
   },
@@ -475,7 +554,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   latencyText: {
-    color: Colors.iqooGold,
+    color: Colors.accentGold,
     fontSize: 10,
     fontWeight: '700',
     marginTop: 2,
@@ -492,7 +571,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: Colors.iqooGold,
+    backgroundColor: Colors.accentGold,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -502,7 +581,7 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   starKeyText: {
-    color: Colors.iqooGold,
+    color: Colors.accentGold,
     fontSize: 10,
     fontWeight: '800',
   },
@@ -522,7 +601,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.md,
   },
   retryBtnText: {
-    color: Colors.iqooGold,
+    color: Colors.accentGold,
     fontSize: Typography.xs,
     fontWeight: '800',
     marginLeft: Spacing.xs,

@@ -13,7 +13,7 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://jobblitz-nvgk.onrender.com/api/v1"
+        "EXPO_PUBLIC_API_URL": "https://rohan45327-jobblitz.hf.space/api/api/v1"
       }
     },
     "production": {

@@ -27,9 +27,13 @@ export function JobCard({ matched, onPress, onQuickApply }: Props) {
 
   const salaryText =
     job.salary_min && job.salary_max
-      ? `$${Math.round(job.salary_min / 1000)}k–$${Math.round(job.salary_max / 1000)}k`
+      ? job.salary_currency === 'INR' 
+        ? `₹${Math.round(job.salary_min / 100000)}L–₹${Math.round(job.salary_max / 100000)}L`
+        : `$${Math.round(job.salary_min / 1000)}k–$${Math.round(job.salary_max / 1000)}k`
       : job.salary_max
-      ? `${Math.round(job.salary_max / 1000)}k`
+      ? job.salary_currency === 'INR'
+        ? `₹${Math.round(job.salary_max / 100000)}L`
+        : `$${Math.round(job.salary_max / 1000)}k`
       : null;
 
   return (

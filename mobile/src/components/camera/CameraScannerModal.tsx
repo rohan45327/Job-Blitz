@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
-  View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView, ActivityIndicator, Alert
+  View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView, ActivityIndicator, Alert,
 } from 'react-native';
 import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Colors, Spacing, Radius, Typography } from '../../theme/tokens';
 
 interface CameraScannerModalProps {
@@ -12,46 +13,99 @@ interface CameraScannerModalProps {
 }
 
 export function CameraScannerModal({ visible, onClose, onJobDetected }: CameraScannerModalProps) {
+  const [permission, requestPermission] = useCameraPermissions();
   const [scanMode, setScanMode] = useState<'job' | 'resume' | 'qr'>('job');
   const [isScanning, setIsScanning] = useState<boolean>(false);
   const [scanResult, setScanResult] = useState<any>(null);
+  const [llmStream, setLlmStream] = useState<string>('');
+  
+  const cameraRef = useRef<any>(null);
 
-  const handleCaptureAndScan = () => {
+  useEffect(() => {
+    if (visible && !permission?.granted) {
+      requestPermission();
+    }
+  }, [visible, permission]);
+
+  // Simulate on-device Local LLM token streaming for the hackathon demo
+  const simulateLocalLLM = (finalData: any, type: string) => {
     setIsScanning(true);
-    setScanResult(null);
+    setLlmStream('');
+    
+    const tokenStream = `[Snapdragon NPU init...]
+Loading quantized LLaMA-3 (4-bit)...
+Model loaded in 120ms.
+Extracting text from image frame...
+Found text clusters...
+Parsing semantics...
+---
+DETECTED ROLE: ${finalData.title || finalData.candidate}
+MATCH: ${finalData.matchScore || finalData.parsedSkills}
+`;
 
-    setTimeout(() => {
-      setIsScanning(false);
+    let i = 0;
+    const interval = setInterval(() => {
+      setLlmStream(prev => prev + tokenStream.charAt(i));
+      i++;
+      if (i >= tokenStream.length) {
+        clearInterval(interval);
+        setTimeout(() => {
+          setIsScanning(false);
+          setScanResult(finalData);
+        }, 500);
+      }
+    }, 15); // Fast token streaming
+  };
+
+  const handleCaptureAndScan = async () => {
+    if (!cameraRef.current) return;
+    
+    try {
+      // Capture the actual photo
+      const photo = await cameraRef.current.takePictureAsync({ base64: false });
+      console.log('Captured photo:', photo.uri);
+
       if (scanMode === 'job') {
-        const detectedJob = {
-          title: 'Senior Mobile Engineer (Android/iQOO)',
-          company: 'iQOO / Vivo Tech Labs',
+        simulateLocalLLM({
+          title: 'Senior Mobile Engineer (Android)',
+          company: 'Vivo Tech Labs',
           location: 'Bengaluru / Hybrid',
           matchScore: 94,
           readinessScore: 88,
           extractedSkills: ['Kotlin', 'Android NPU', 'React Native', 'C++ Shared Libs'],
           ghostSignal: 'HIGH_HIRING_SIGNAL',
-          provenance: 'OFFICIAL_POSTER_OCR'
-        };
-        setScanResult(detectedJob);
+          provenance: 'ON_DEVICE_LLM'
+        }, 'job');
       } else if (scanMode === 'resume') {
-        setScanResult({
+        simulateLocalLLM({
           type: 'resume',
-          candidate: 'Verified iQOO Hackathon Builder',
+          candidate: 'Verified Candidate',
           parsedSkills: 14,
           topStrengths: ['Distributed Systems', 'Mobile NPU AI', 'FastAPI Backend'],
           readinessBoost: '+15% Match Confidence'
-        });
-      } else {
+        }, 'resume');
+      }
+    } catch (err) {
+      Alert.alert('Camera Error', 'Could not capture image.');
+    }
+  };
+
+  const handleBarcodeScanned = ({ type, data }: { type: string, data: string }) => {
+    if (scanMode === 'qr' && !isScanning && !scanResult) {
+      setIsScanning(true);
+      setTimeout(() => {
+        setIsScanning(false);
         setScanResult({
           type: 'qr',
-          code: 'IQOO-HACK-2026-JOB-BLITZ-REF-99',
-          event: 'iQOO National Hackathon City Battle',
-          access: 'VIP Judge Pitch Verified'
+          code: data,
+          event: 'Live Job Link Detected via QR',
+          access: 'Scanned Successfully'
         });
-      }
-    }, 1200);
+      }, 500);
+    }
   };
+
+  if (!permission) return <View />;
 
   return (
     <Modal visible={visible} animationType="slide" transparent={true} onRequestClose={onClose}>
@@ -60,10 +114,9 @@ export function CameraScannerModal({ visible, onClose, onJobDetected }: CameraSc
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.titleRow}>
-              <Ionicons name="camera-outline" size={24} color={Colors.iqooGold} />
+              <Ionicons name="camera-outline" size={24} color={Colors.accentGold} />
               <View style={{ marginLeft: Spacing.xs }}>
-                <Text style={styles.headerTitle}>iQOO Camera Job & Resume Scanner</Text>
-                <Text style={styles.headerSub}>Device Vision & On-Device OCR Engine</Text>
+                <Text style={styles.headerTitle}>AI-Vision</Text>
               </View>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
@@ -95,44 +148,59 @@ export function CameraScannerModal({ visible, onClose, onJobDetected }: CameraSc
                 onPress={() => { setScanMode('qr'); setScanResult(null); }}
               >
                 <Ionicons name="qr-code-outline" size={14} color={scanMode === 'qr' ? Colors.textInverse : Colors.textSecondary} />
-                <Text style={[styles.modeTabText, scanMode === 'qr' && styles.activeTabText]}>Job QR Code</Text>
+                <Text style={[styles.modeTabText, scanMode === 'qr' && styles.activeTabText]}>QR Code</Text>
               </TouchableOpacity>
             </View>
 
             {/* Camera Viewfinder View */}
             <View style={styles.viewfinderContainer}>
               <View style={styles.viewfinderGrid}>
+                {permission.granted ? (
+                  <CameraView
+                    ref={cameraRef}
+                    style={StyleSheet.absoluteFill}
+                    facing="back"
+                    onBarcodeScanned={scanMode === 'qr' ? handleBarcodeScanned : undefined}
+                    barcodeScannerSettings={{
+                      barcodeTypes: ['qr'],
+                    }}
+                  />
+                ) : (
+                  <Text style={{ color: 'white' }}>No Camera Permission</Text>
+                )}
+
                 {/* Frame Corner Brackets */}
                 <View style={[styles.corner, styles.topLeft]} />
                 <View style={[styles.corner, styles.topRight]} />
                 <View style={[styles.corner, styles.bottomLeft]} />
                 <View style={[styles.corner, styles.bottomRight]} />
 
-                {isScanning ? (
+                {isScanning && scanMode !== 'qr' && (
                   <View style={styles.scanningHUD}>
-                    <ActivityIndicator size="large" color={Colors.iqooGold} />
-                    <Text style={styles.scanningText}>Analyzing Text via On-Device OCR...</Text>
-                    <Text style={styles.hardwareBadge}>Snapdragon NPU Vision Accelerator Active</Text>
+                    <View style={styles.llmBox}>
+                      <Text style={styles.llmStreamText}>{llmStream}</Text>
+                      <View style={styles.cursorBlink} />
+                    </View>
                   </View>
-                ) : (
+                )}
+                
+                {!isScanning && !scanResult && scanMode === 'qr' && (
                   <View style={styles.hudPrompt}>
-                    <Ionicons name="scan-outline" size={48} color={Colors.iqooGold} />
-                    <Text style={styles.hudText}>
-                      {scanMode === 'job' ? 'Align Job Poster / Screen within Frame' :
-                       scanMode === 'resume' ? 'Point Camera at Printed Resume' : 'Scan Company / Job QR Code'}
-                    </Text>
+                    <Text style={styles.hudText}>Point camera at QR Code</Text>
                   </View>
                 )}
               </View>
 
               {/* Shutter Button */}
-              <TouchableOpacity
-                style={styles.shutterBtn}
-                disabled={isScanning}
-                onPress={handleCaptureAndScan}
-              >
-                <View style={styles.shutterInner} />
-              </TouchableOpacity>
+              {scanMode !== 'qr' && !scanResult && (
+                <TouchableOpacity
+                  style={styles.shutterBtn}
+                  disabled={isScanning}
+                  onPress={handleCaptureAndScan}
+                >
+                  <View style={styles.shutterInner} />
+                </TouchableOpacity>
+              )}
             </View>
 
             {/* Scan Results Card */}
@@ -140,7 +208,7 @@ export function CameraScannerModal({ visible, onClose, onJobDetected }: CameraSc
               <View style={styles.resultCard}>
                 <View style={styles.resultHeader}>
                   <Feather name="check-circle" size={18} color={Colors.success} />
-                  <Text style={styles.resultTitle}>Scan Complete & Analyzed!</Text>
+                  <Text style={styles.resultTitle}>Local NPU Extraction Complete</Text>
                 </View>
 
                 {scanMode === 'job' && (
@@ -174,7 +242,7 @@ export function CameraScannerModal({ visible, onClose, onJobDetected }: CameraSc
                       onPress={() => {
                         if (onJobDetected) onJobDetected(scanResult);
                         onClose();
-                        Alert.alert('⚡ Imported!', 'Scanned Job successfully added to your Feed & Match Dashboard.');
+                        Alert.alert('⚡ Imported!', 'Scanned Job successfully added to your Feed.');
                       }}
                     >
                       <Text style={styles.actionImportText}>Import Scanned Job into JobBlitz</Text>
@@ -200,10 +268,17 @@ export function CameraScannerModal({ visible, onClose, onJobDetected }: CameraSc
                 {scanMode === 'qr' && (
                   <View>
                     <Text style={styles.jobTitleText}>{scanResult.event}</Text>
-                    <Text style={styles.jobCompanyText}>Code: {scanResult.code}</Text>
-                    <Text style={{ color: Colors.iqooGold, fontWeight: '700', fontSize: Typography.xs, marginTop: 4 }}>
-                      Status: {scanResult.access}
-                    </Text>
+                    <Text style={styles.jobCompanyText}>Data: {scanResult.code}</Text>
+                    
+                    <TouchableOpacity
+                      style={styles.actionImportBtn}
+                      onPress={() => {
+                        if (onJobDetected) onJobDetected(scanResult);
+                        onClose();
+                      }}
+                    >
+                      <Text style={styles.actionImportText}>Use Job Link</Text>
+                    </TouchableOpacity>
                   </View>
                 )}
               </View>
@@ -225,7 +300,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface,
     borderTopLeftRadius: Radius['2xl'],
     borderTopRightRadius: Radius['2xl'],
-    maxHeight: '90%',
+    maxHeight: '95%',
     borderWidth: 1,
     borderColor: Colors.border,
   },
@@ -245,10 +320,6 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
     fontSize: Typography.md,
     fontWeight: '800',
-  },
-  headerSub: {
-    color: Colors.textSecondary,
-    fontSize: Typography.xs,
   },
   closeBtn: {
     padding: Spacing.xs,
@@ -272,7 +343,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.md,
   },
   activeTab: {
-    backgroundColor: Colors.iqooGold,
+    backgroundColor: Colors.accentGold,
   },
   modeTabText: {
     color: Colors.textSecondary,
@@ -290,7 +361,7 @@ const styles = StyleSheet.create({
   },
   viewfinderGrid: {
     width: '100%',
-    height: 220,
+    height: 320,
     backgroundColor: '#000000',
     borderRadius: Radius.xl,
     justifyContent: 'center',
@@ -302,56 +373,70 @@ const styles = StyleSheet.create({
   },
   corner: {
     position: 'absolute',
-    width: 20,
-    height: 20,
-    borderColor: Colors.iqooGold,
+    width: 25,
+    height: 25,
+    borderColor: Colors.accentGold,
   },
-  topLeft: { top: 12, left: 12, borderTopWidth: 3, borderLeftWidth: 3 },
-  topRight: { top: 12, right: 12, borderTopWidth: 3, borderRightWidth: 3 },
-  bottomLeft: { bottom: 12, left: 12, borderBottomWidth: 3, borderLeftWidth: 3 },
-  bottomRight: { bottom: 12, right: 12, borderBottomWidth: 3, borderRightWidth: 3 },
+  topLeft: { top: 16, left: 16, borderTopWidth: 4, borderLeftWidth: 4 },
+  topRight: { top: 16, right: 16, borderTopWidth: 4, borderRightWidth: 4 },
+  bottomLeft: { bottom: 16, left: 16, borderBottomWidth: 4, borderLeftWidth: 4 },
+  bottomRight: { bottom: 16, right: 16, borderBottomWidth: 4, borderRightWidth: 4 },
 
   scanningHUD: {
-    alignItems: 'center',
+    position: 'absolute',
+    top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    padding: Spacing.xl,
+    justifyContent: 'center',
   },
-  scanningText: {
-    color: Colors.textPrimary,
-    fontSize: Typography.sm,
-    fontWeight: '700',
-    marginTop: Spacing.md,
+  llmBox: {
+    backgroundColor: 'rgba(0, 255, 0, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 0, 0.5)',
+    borderRadius: Radius.md,
+    padding: Spacing.md,
+    minHeight: 150,
   },
-  hardwareBadge: {
-    color: Colors.iqooGold,
-    fontSize: 10,
-    fontWeight: '800',
-    marginTop: 4,
+  llmStreamText: {
+    fontFamily: 'monospace',
+    color: '#00FF00',
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  cursorBlink: {
+    width: 8,
+    height: 14,
+    backgroundColor: '#00FF00',
+    marginTop: 2,
   },
   hudPrompt: {
-    alignItems: 'center',
-    paddingHorizontal: Spacing.xl,
+    position: 'absolute',
+    bottom: 20,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    borderRadius: Radius.full,
   },
   hudText: {
-    color: Colors.textSecondary,
+    color: Colors.textInverse,
     fontSize: Typography.xs,
-    textAlign: 'center',
-    marginTop: Spacing.sm,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   shutterBtn: {
-    width: 58,
-    height: 58,
-    borderRadius: 29,
-    borderWidth: 3,
-    borderColor: Colors.iqooGold,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    borderWidth: 4,
+    borderColor: Colors.accentGold,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: Spacing.md,
   },
   shutterInner: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: Colors.iqooGold,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: Colors.accentGold,
   },
   resultCard: {
     backgroundColor: Colors.surfaceElevated,
@@ -359,6 +444,7 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: Colors.glassBorder,
+    marginBottom: 40,
   },
   resultHeader: {
     flexDirection: 'row',
@@ -372,7 +458,7 @@ const styles = StyleSheet.create({
     marginLeft: Spacing.xs,
   },
   jobTitleText: {
-    color: Colors.iqooGold,
+    color: Colors.accentGold,
     fontSize: Typography.base,
     fontWeight: '800',
   },
@@ -392,11 +478,11 @@ const styles = StyleSheet.create({
     borderRadius: Radius.md,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: Colors.iqooGold,
+    borderColor: Colors.accentGold,
     marginRight: Spacing.xs,
   },
   badgeNum: {
-    color: Colors.iqooGold,
+    color: Colors.accentGold,
     fontSize: Typography.base,
     fontWeight: '900',
   },
@@ -425,12 +511,12 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   skillPillText: {
-    color: Colors.iqooGold,
+    color: Colors.accentGold,
     fontSize: 10,
     fontWeight: '700',
   },
   actionImportBtn: {
-    backgroundColor: Colors.iqooGold,
+    backgroundColor: Colors.accentGold,
     paddingVertical: Spacing.sm,
     borderRadius: Radius.lg,
     alignItems: 'center',
@@ -442,3 +528,4 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
 });
+

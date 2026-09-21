@@ -2,14 +2,14 @@
 // Twitter/X-inspired minimalist: pure black (dark) ↔ pure white (light)
 
 export const Colors = {
-  // Brand — iQOO Cyber Gold & Deep Purple
+  // Brand — Cyber Gold & Deep Purple
   primary: '#FFB800',
   primaryLight: '#FFC837',
   primaryDark: '#D49800',
   accent: '#8B5CF6',
   accentDark: '#7C3AED',
-  iqooGold: '#FFB800',
-  iqooYellow: '#F5C518',
+  accentGold: '#FFB800',
+  accentYellow: '#F5C518',
   cyberBlue: '#00E5FF',
 
   // Status

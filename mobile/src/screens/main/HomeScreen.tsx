@@ -1,7 +1,7 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
-  ActivityIndicator, RefreshControl, Modal, Alert
+  ActivityIndicator, RefreshControl, Modal, Alert, Animated
 } from 'react-native';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -17,8 +17,7 @@ import { ThunderLoader } from '../../components/common/ThunderLoader';
 import { cleanText } from '../../utils/cleanText';
 import { RootStackParams } from '../../../App';
 
-// iQOO Hackathon Components
-import { OfficeKitBridge } from '../../components/bridge/OfficeKitBridge';
+// Demo Components
 import { VoiceInterviewModal } from '../../components/voice/VoiceInterviewModal';
 import { CameraScannerModal } from '../../components/camera/CameraScannerModal';
 import { DemoPitchModeModal } from '../../components/demo/DemoPitchModeModal';
@@ -36,10 +35,33 @@ export function HomeScreen() {
   const [activeTab, setActiveTab] = useState<'all' | 'high_match'>('all');
   const [selectedHighMatch, setSelectedHighMatch] = useState<MatchedJobOut | null>(null);
 
-  // iQOO Hackathon Features State
+  // Demo Features State
   const [showCameraScanner, setShowCameraScanner] = useState(false);
   const [showVoiceModal, setShowVoiceModal] = useState(false);
   const [showPitchModal, setShowPitchModal] = useState(false);
+  
+  // Fake Notification State
+  const [showFakeNotif, setShowFakeNotif] = useState(false);
+  const slideAnim = useRef(new Animated.Value(-150)).current;
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowFakeNotif(true);
+      Animated.spring(slideAnim, {
+        toValue: 10,
+        useNativeDriver: true,
+      }).start();
+
+      setTimeout(() => {
+        Animated.timing(slideAnim, {
+          toValue: -150,
+          duration: 300,
+          useNativeDriver: true,
+        }).start(() => setShowFakeNotif(false));
+      }, 5000);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [slideAnim]);
 
   const { data, isLoading, refetch, isFetching } = useQuery({
     queryKey: ['job-feed', filters, page],
@@ -89,7 +111,7 @@ export function HomeScreen() {
         </View>
 
         <View style={styles.headerActions}>
-          {/* Hackathon Jury Pitch Mode Button */}
+          {/* Pitch Mode Button */}
           <TouchableOpacity
             style={[styles.iconBtn, { backgroundColor: 'rgba(255, 184, 0, 0.15)', borderColor: colors.primary }]}
             onPress={() => setShowPitchModal(true)}
@@ -132,14 +154,6 @@ export function HomeScreen() {
         </View>
       </View>
 
-      {/* iQOO Office Kit Phone-Laptop Bridge Bar */}
-      <OfficeKitBridge
-        onPasteJobUrl={(url) => {
-          Alert.alert('⚡ Office Kit Sync', `Imported job posting: ${url}`);
-        }}
-        onOpenPitchMode={() => setShowPitchModal(true)}
-      />
-
       {/* Navigation Tabs */}
       <View style={[styles.tabBar, { borderBottomColor: colors.border }]}>
         <TouchableOpacity
@@ -174,6 +188,10 @@ export function HomeScreen() {
             keyExtractor={(item) => item.job.id}
             contentContainerStyle={styles.list}
             showsVerticalScrollIndicator={false}
+            removeClippedSubviews={true}
+            initialNumToRender={10}
+            maxToRenderPerBatch={10}
+            windowSize={5}
             refreshControl={
               <RefreshControl
                 refreshing={isFetching}
@@ -310,7 +328,7 @@ export function HomeScreen() {
         onClose={() => setShowFilters(false)}
       />
 
-      {/* iQOO Hackathon Camera Scanner Modal */}
+      {/* Camera Scanner Modal */}
       <CameraScannerModal
         visible={showCameraScanner}
         onClose={() => setShowCameraScanner(false)}
@@ -319,13 +337,13 @@ export function HomeScreen() {
         }}
       />
 
-      {/* iQOO Hackathon Voice Interview Modal */}
+      {/* Voice Interview Modal */}
       <VoiceInterviewModal
         visible={showVoiceModal}
         onClose={() => setShowVoiceModal(false)}
       />
 
-      {/* iQOO Hackathon Demo & Jury Pitch Mode Modal */}
+      {/* Demo Pitch Mode Modal */}
       <DemoPitchModeModal
         visible={showPitchModal}
         onClose={() => setShowPitchModal(false)}
@@ -339,6 +357,19 @@ export function HomeScreen() {
           setShowCameraScanner(true);
         }}
       />
+
+      {/* Fake Notification */}
+      {showFakeNotif && (
+        <Animated.View style={[styles.fakeNotif, { transform: [{ translateY: slideAnim }], backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <View style={[styles.fakeNotifIcon, { backgroundColor: colors.primary + '22' }]}>
+            <Feather name="bell" size={16} color={colors.primary} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.fakeNotifTitle, { color: colors.textPrimary }]}>High Match Alert</Text>
+            <Text style={[styles.fakeNotifDesc, { color: colors.textSecondary }]}>A new role at Google matched your profile 78%. Tap to review.</Text>
+          </View>
+        </Animated.View>
+      )}
     </View>
   );
 }
@@ -472,4 +503,27 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   modalApplyText: { fontSize: Typography.sm, fontWeight: '800', color: '#FFFFFF' },
+  fakeNotif: {
+    position: 'absolute',
+    top: 40,
+    left: Spacing.lg,
+    right: Spacing.lg,
+    borderRadius: Radius.xl,
+    borderWidth: 1,
+    padding: Spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 8,
+    zIndex: 9999,
+  },
+  fakeNotifIcon: {
+    width: 36, height: 36, borderRadius: Radius.full, alignItems: 'center', justifyContent: 'center'
+  },
+  fakeNotifTitle: { fontSize: Typography.sm, fontWeight: '800' },
+  fakeNotifDesc: { fontSize: Typography.xs, marginTop: 2, lineHeight: 18 },
 });
