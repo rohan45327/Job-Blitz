@@ -1,13 +1,4 @@
----
-title: JobBlitz
-emoji: 🚀
-colorFrom: blue
-colorTo: purple
-sdk: gradio
-sdk_version: "4.44.1"
-app_file: app.py
-pinned: false
----
+
 
 # Job Blitz 🚀
 
@@ -15,7 +6,7 @@ Job Blitz is an AI-powered Job Application Productivity Agent that reduces the r
 
 Instead of treating job hunting as a collection of disconnected tasks, Job Blitz turns it into one intelligent workflow.
 
-## 🌟 The Solution
+## The Solution
 
 Job Blitz acts as an AI productivity layer over the complete job application workflow. It helps a candidate:
 - Discover relevant opportunities
@@ -27,7 +18,7 @@ Job Blitz acts as an AI productivity layer over the complete job application wor
 - Apply and track applications
 - Receive reminders and follow-ups
 
-## 🏗 Architecture & Tech Stack
+## Architecture & Tech Stack
 
 ### Frontend (Mobile App)
 Located in the `/mobile` directory, the frontend is a cross-platform mobile application.
@@ -45,7 +36,7 @@ Located in the `/backend` directory, this drives the core logic, AI integrations
 - **AI Integration:** Google Generative AI (Gemini) & OpenAI
 - **Utilities:** PDF/Docx Parsing (`pdfplumber`, `python-docx`) and Job Scraping (`python-jobspy`, `beautifulsoup4`)
 
-## 📂 Project Structure
+## Project Structure
 
 ```text
 autopin/
@@ -66,7 +57,7 @@ autopin/
 └── README.md              # Project documentation
 ```
 
-## 🚀 Pipelines & Deployment
+## Pipelines & Deployment
 
 ### 1. Local Development Pipeline (`docker-compose.yml`)
 You can spin up the entire backend stack locally using Docker Compose. This pipeline automatically orchestrates:
@@ -95,7 +86,7 @@ The mobile application is integrated with **Expo Application Services (EAS)** fo
 cd mobile && npm run build:apk
 ```
 
-## 🛠 Features in Detail
+## Features in Detail
 
 1. **AI Job Intelligence:** Extracts skills, responsibilities, and keywords from scraped job descriptions.
 2. **Match & Readiness Engine:** Produces an explainable fit score based on your profile.
@@ -104,5 +95,5 @@ cd mobile && npm run build:apk
 5. **Interview Copilot:** Generates mock interviews and questions specific to the role.
 6. **Application Tracker:** Centralized workspace for tracking deadlines, follow-ups, and outcomes.
 
-## 📜 License
+## License
 Licensed under the **MIT License**. See the `LICENSE` file for more details.
